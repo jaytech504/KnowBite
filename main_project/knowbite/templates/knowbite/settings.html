@@ -1,0 +1,37 @@
+{% extends 'knowbite/base.html' %}
+{% block content %}
+<div class="col-md-9 col-lg-10 main-content">
+    <div class="container">
+        <div class="account-card">
+            <h4 class="mb-4">My Account</h4>
+            
+            <div class="info-row">
+                <div>Email</div>
+                <div class="descrip">{{ user.email }}</div>
+            </div>
+            
+            <div class="info-row">
+                <div>Name</div>
+                <div class="descrip">{{ user.username }}</div>
+            </div>
+            
+            <div class="info-row">
+                <div>Current Pricing Plan</div>
+                <div class="descrip">Starter Plan</div>
+            </div>
+            
+            <div class="info-row">
+                <div>Dark Mode</div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="dark-mode-toggle" {% if request.session.dark_mode %}checked{% endif %}>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary w-100 btn-billing">
+                Access Billing Portal
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

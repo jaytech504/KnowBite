@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KnowBite - Transform Your Content</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/main.css' %}" rel="stylesheet" type="text/css">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <div class="land">
+     <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-robot" style="color: #0d6efd;" viewBox="0 0 16 16">
+                    <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5M3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.58 26.58 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.933.933 0 0 1-.765.935c-.845.147-2.34.346-4.235.346-1.895 0-3.39-.2-4.235-.346A.933.933 0 0 1 3 9.219zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a24.767 24.767 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25.286 25.286 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.135z"/>
+                    <path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2zM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5"/>
+                </svg>
+                    <span class="fs-4 fw-semibold" style="color: #0d6efd; font-weight: bold;">KnowBite</span>
+                </div>
+                <a href="{% url 'register' %}"><button class="btn btn-primary">Get Started</button></a>
+     </div>
+    </div>
+    <div class="gradient-header">
+        <div class="container">
+            
+            <div class="text-center mx-auto" style="max-width: 700px;">
+                <h1 class="display-4 fw-bold mb-3">Transform Your Learning with AI</h1>
+                <p class="text-muted mb-4">Upload PDFs, audio, and video files to generate quizzes, summaries, and unlock powerful insights instantly.</p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{% url 'register' %}"><button class="btn btn-primary px-4">Try for Free</button></a>
+                    <a href="#demo"><button class="btn btn-outline-primary px-4">Learn More</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="container py-5">
+        <h2 class="text-center fw-bold mb-5">Powerful Features</h2>
+        <div class="row g-4">
+            <!-- PDF Processing -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body">
+                        <i class="fas fa-file-pdf feature-icon"></i>
+                        <h3 class="h5 fw-bold mb-3">PDF Processing</h3>
+                        <p class="text-muted">Extract key information from your PDF documents automatically.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Audio Analysis -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body">
+                        <i class="fas fa-headphones feature-icon"></i>
+                        <h3 class="h5 fw-bold mb-3">Audio Analysis</h3>
+                        <p class="text-muted">Convert speech to text and generate summaries from audio files.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Video Intelligence -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body">
+                        <i class="fas fa-play-circle feature-icon"></i>
+                        <h3 class="h5 fw-bold mb-3">Video Intelligence</h3>
+                        <p class="text-muted">Extract insights and create notes from video content.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Smart Summaries -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body">
+                        <i class="fas fa-book feature-icon"></i>
+                        <h3 class="h5 fw-bold mb-3">Smart Summaries</h3>
+                        <p class="text-muted">Get concise summaries of your content in seconds.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Quiz Generation -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body">
+                        <i class="fas fa-question-circle feature-icon"></i>
+                        <h3 class="h5 fw-bold mb-3">Quiz Generation</h3>
+                        <p class="text-muted">Create interactive quizzes from your learning materials.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- AI Insights -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card feature-card h-100 p-4">
+                    <div class="card-body">
+                        <i class="fas fa-brain feature-icon"></i>
+                        <h3 class="h5 fw-bold mb-3">AI Insights</h3>
+                        <p class="text-muted">Gain deeper understanding with AI-powered analysis using the chatbot.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Section -->
+    <div class="bg-light py-5" id="demo">
+        <div class="container">
+            <h2 class="fw-bold mb-3">See it in Action</h2>
+            <p class="text-muted mb-4">Watch how easily you can transform your documents into interactive learning materials.</p>
+            
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <img src="/api/placeholder/800/400" alt="Demo" class="img-fluid rounded shadow">
+                </div>
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h3 class="h5 fw-bold mb-4">Supported File Types</h3>
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-file-pdf me-2 text-primary"></i>
+                                <span>PDF Documents</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-headphones me-2 text-primary"></i>
+                                <span>Audio Files (MP3, WAV)</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-video me-2 text-primary"></i>
+                                <span>Video Files (MP4, AVI)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="container py-5 text-center">
+        <h2 class="fw-bold mb-3">Ready to Get Started?</h2>
+        <p class="text-muted mb-4">Join thousands of users who are already transforming their content with AI.</p>
+       <a href="{% url 'register' %}"><button class="btn btn-primary btn-lg px-5">Start Free Trial</button></a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
