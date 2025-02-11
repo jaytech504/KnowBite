@@ -1,1 +1,5 @@
 /knowbite
+main_project/main_project/.env/
+*.log
+logs/
+*.sqlite3
