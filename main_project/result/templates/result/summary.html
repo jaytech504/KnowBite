@@ -2,9 +2,16 @@
 {% block result %}
 <div class="col-md-9 col-lg-10 main-content">
     <div class="container">
-        <div>
-        {{ summary|safe }}
-        </div>
+        <div class="summary">
+           {% if error %}
+            <p>{{ error }} </p>
+            {% endif %}
+            <h3> Summary </h3>
+            {% for sentence in summary %}
+               
+               <p> 📌{{ sentence }}<p>
+            {% endfor %}
+          </div>
     </div>
 </div>
 {% endblock %}
