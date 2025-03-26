@@ -25,8 +25,8 @@
                     Back
                 </a>
                 <nav class="nav flex-column mt-4">
-                    <a class="nav-link active" href="#"><i class="bi bi-file me-2"></i>Summarry</a>
-                    <a class="nav-link" href="#"><i class="bi bi-chat me-2"></i>Quiz</a>
+                    <a class="nav-link active" href="{% url 'summary' file.id %}"><i class="bi bi-file me-2"></i>Summarry</a>
+                    <a class="nav-link" href="{% url 'quiz_options' file.id %}"><i class="bi bi-chat me-2"></i>Quiz</a>
                     <a class="nav-link" href="#"><i class="bi bi-chat me-2"></i>Chatbot</a>
                     <a class="nav-link" href="#"><i class="bi bi-text me-2"></i>Transcript</a>
                 </nav>

@@ -128,30 +128,6 @@ body.dark-mode .descrip {
     }
 }
 
-ul {
-    list-style-type: none; /* Remove default bullet */
-    padding-left: 0;
-  }
-  ul li {
-    position: relative;
-    padding-left: 1.5em;
-    margin-bottom: 0.4em;
-  }
-  ul li::before {
-    content: "•";
-    position: absolute;
-    left: 0;
-    color: #FFB86C; /* bullet color */
-    font-weight: bold;
-  }
-  pre {
-    background: #282A36;
-    color: #F8F8F2;
-    padding: 1em;
-    margin: 1em 0;
-    border-radius: 6px;
-    overflow-x: auto;
-  }
   code {
     font-family: "Courier New", monospace;
   }
@@ -274,4 +250,19 @@ body.dark-mode .large-icon {
 .alert-danger {
     background-color: #f8d7da;
     color: #721c24;
+}
+.summary-content p {
+    margin-bottom: 5px;  /* Adjust spacing between paragraphs */
+    line-height: 1.4;   /* Adjust line height for better readability */
+}
+
+.summary-content ul, 
+.summary-content ol {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 20px;
+}
+
+.summary-content li {
+    margin-bottom: 3px; /* Reduce spacing between bullet points */
 }

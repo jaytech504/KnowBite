@@ -1,0 +1,29 @@
+{% extends 'result/base_result.html' %}
+{% block result %}
+<h2>Quiz Results</h2>
+<p>You answered {{ correct }} out of {{ total }} questions correctly.</p>
+<p>Your score: {{ score }}%</p>
+<hr>
+{% for res in results %}
+    <div style="margin-bottom: 20px;">
+        <p><strong>Question {{ forloop.counter }}:</strong> {{ res.question }}</p>
+        <ul>
+            {% for option in res.options %}
+                {% if option|slice:":1" == res.correct_answer %}
+                    <li class="correct">
+                        {{ option }}
+                        {% if option|slice:":1" == res.user_answer %}
+                            (Your answer)
+                        {% endif %}
+                    </li>
+                {% elif option|slice:":1" == res.user_answer %}
+                    <li class="incorrect">{{ option }} (Your answer)</li>
+                {% else %}
+                    <li>{{ option }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+{% endfor %}
+<a href="{% url 'upload' %}">Upload another file</a>
+{% endblock %}

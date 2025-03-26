@@ -1,16 +1,10 @@
 {% extends 'result/base_result.html' %}
+{% load markdownify %}
 {% block result %}
 <div class="col-md-9 col-lg-10 main-content">
     <div class="container">
-        <div class="summary">
-           {% if error %}
-            <p>{{ error }} </p>
-            {% endif %}
-            <h3> Summary </h3>
-            {% for sentence in summary %}
-               
-               <p> 📌{{ sentence }}<p>
-            {% endfor %}
+        <div class="summary-container">
+                {{ summary | safe | markdownify }}
           </div>
     </div>
 </div>

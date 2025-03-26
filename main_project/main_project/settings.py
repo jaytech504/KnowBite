@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'result',
     'users',
     'crispy_forms',
+    'markdownify'
 ]
 
 MIDDLEWARE = [

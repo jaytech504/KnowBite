@@ -1,0 +1,19 @@
+{% extends 'result/base_result.html' %}
+{% block result %}
+<h2>MCQ Quiz</h2>
+<form method="post" action="{% url 'evaluate_quiz' %}">
+    {% csrf_token %}
+    {% for question in quiz %}
+        <div style="margin-bottom: 20px;">
+            <p><strong>Question {{ forloop.counter }}:</strong> {{ question.question }}</p>
+            {% for option in question.options %}
+                <label>
+                    <input type="radio" name="question_{{ forloop.parentloop.counter0 }}" value="{{ option|slice:":1" }}" required>
+                    {{ option }}
+                </label><br>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <button type="submit">Submit Quiz</button>
+</form>
+{% endblock %}
