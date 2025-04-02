@@ -1,19 +1,18 @@
 {% extends 'result/base_result.html' %}
 {% block result %}
 <h2>MCQ Quiz</h2>
-<form method="post" action="{% url 'evaluate_quiz' %}">
+<form method="post" action="{% url 'submit_quiz' file.id %}">
     {% csrf_token %}
-    {% for question in quiz %}
-        <div style="margin-bottom: 20px;">
-            <p><strong>Question {{ forloop.counter }}:</strong> {{ question.question }}</p>
-            {% for option in question.options %}
-                <label>
-                    <input type="radio" name="question_{{ forloop.parentloop.counter0 }}" value="{{ option|slice:":1" }}" required>
-                    {{ option }}
-                </label><br>
-            {% endfor %}
+    {% for mcq in mcqs %}
+        <div>
+            <p><strong>{{ mcq.question }}</strong></p>
+            <label><input type="radio" name="{{ forloop.counter0 }}" value="A"> {{ mcq.option_a }}</label><br>
+            <label><input type="radio" name="{{ forloop.counter0 }}" value="B"> {{ mcq.option_b }}</label><br>
+            <label><input type="radio" name="{{ forloop.counter0 }}" value="C"> {{ mcq.option_c }}</label><br>
+            <label><input type="radio" name="{{ forloop.counter0 }}" value="D"> {{ mcq.option_d }}</label><br>
         </div>
     {% endfor %}
     <button type="submit">Submit Quiz</button>
 </form>
+
 {% endblock %}

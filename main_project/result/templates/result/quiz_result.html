@@ -1,29 +1,25 @@
 {% extends 'result/base_result.html' %}
 {% block result %}
 <h2>Quiz Results</h2>
-<p>You answered {{ correct }} out of {{ total }} questions correctly.</p>
-<p>Your score: {{ score }}%</p>
-<hr>
-{% for res in results %}
-    <div style="margin-bottom: 20px;">
-        <p><strong>Question {{ forloop.counter }}:</strong> {{ res.question }}</p>
-        <ul>
-            {% for option in res.options %}
-                {% if option|slice:":1" == res.correct_answer %}
-                    <li class="correct">
-                        {{ option }}
-                        {% if option|slice:":1" == res.user_answer %}
-                            (Your answer)
-                        {% endif %}
-                    </li>
-                {% elif option|slice:":1" == res.user_answer %}
-                    <li class="incorrect">{{ option }} (Your answer)</li>
-                {% else %}
-                    <li>{{ option }}</li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    </div>
+<p>Score: {{ score }}%</p>
+
+{% for result in results %}
+    <p>
+        <strong>{{ result.question }}</strong><br>
+    </p>
+    {% for option in result.options %}
+            {% if option == result.correct_choice %}
+                <p style="color: green;"><strong>{{ option }}</strong></p>
+            {% elif option == result.user_choice %}
+                <p style="color: red;"><strong>{{ option }}</strong></p>
+            {% else %}
+                <p>{{ option }}</p>
+            {% endif %}
+        {% endfor %}
 {% endfor %}
-<a href="{% url 'upload' %}">Upload another file</a>
+
+<a href="{% url 'take_quiz' file.id %}">
+    <button>Take Another Quiz</button>
+</a>
+
 {% endblock %}

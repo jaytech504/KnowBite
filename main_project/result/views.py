@@ -1,13 +1,18 @@
 import os
+import random
 import re
 import time
 import requests
 import fitz         # PyMuPDF for PDF extraction
 import pytesseract  # For OCR fallback
 from PIL import Image
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 from django.shortcuts import render, get_object_or_404, redirect
-from knowbite.models import UploadedFile
+from knowbite.models import UploadedFile, Summary
 from transformers import AutoTokenizer
+from django.utils.safestring import mark_safe
 import google.generativeai as genai
 
 
@@ -15,6 +20,12 @@ import google.generativeai as genai
 GEMINI_API_KEY = "AIzaSyBEH5_BKeu6wQsfWQz8lnN14xdqqQMuUtY"  
 genai.configure(api_key=GEMINI_API_KEY)
 
+generation_config = {
+    "temperature": 0.7,  # Adjust creativity level
+    "top_p": 0.9,
+    "top_k": 50,
+    "max_output_tokens": 5000,
+}
 # -------------------------------------------------------------------
 # Helper Functions: Text Extraction using PyMuPDF
 # -------------------------------------------------------------------
@@ -40,6 +51,7 @@ def extract_text_from_txt(txt_path):
 
 def generate_summary_with_gemini(text):
     """Send extracted text to Gemini API and get structured summary."""
+
     
     model = genai.GenerativeModel("gemini-2.0-flash-lite")
 
@@ -56,7 +68,7 @@ def generate_summary_with_gemini(text):
     
     Text: {text}
     """
-    response = model.generate_content(prompt)
+    response = model.generate_content(prompt, generation_config=generation_config)
 
     return response.text if response.text else "No summary available."
 
@@ -86,92 +98,189 @@ def base(request, file_id):
 def summary_result(request, file_id):
     """Extracts text from the uploaded file and generates a structured summary."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+    summary_instance = Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
     file_path = uploaded_file.file.path
-    if file_path.lower().endswith(".pdf"):
-        extracted_text = extract_text_from_pdf(file_path)
-        print(extracted_text)
-    elif file_path.lower().endswith(".txt"):
-        extracted_text = extract_text_from_txt(file_path)
-        print(extracted_text)
-    else:
-        extracted_text = "Unsupported file type."
 
-    if extracted_text and extracted_text != "Unsupported file type.":
-        if len(extracted_text) > 3000:
-            summary = generate_long_summary(extracted_text)
-        else:
-            summary = generate_summary_with_gemini(extracted_text)
+    if summary_instance and "regenerate" not in request.GET:
+        summary = summary_instance.summary_text
     else:
-        summary = "No text could be extracted from the file."
+        if file_path.lower().endswith(".pdf"):
+            extracted_text = extract_text_from_pdf(file_path)
+        elif file_path.lower().endswith(".txt"):
+            extracted_text = extract_text_from_txt(file_path)
+        else:
+            extracted_text = "Unsupported file type."
+
+        if extracted_text and extracted_text != "Unsupported file type.":
+            if len(extracted_text) > 3000:
+                summary = generate_long_summary(extracted_text)
+            else:
+                summary = generate_summary_with_gemini(extracted_text)
+        else:
+            summary = "No text could be extracted from the file."
+
+        if summary_instance:
+            summary_instance.summary_text = summary
+            summary_instance.save()
+        else:
+            Summary.objects.create(user=request.user, uploaded_file=uploaded_file, summary_text=summary)
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'summary': summary,
+                'timestamp': time.time()
+            })
+        return redirect('summary', file_id=file_id)
     
-    
+
     return render(request, "result/summary.html", {
         "file": uploaded_file,
-        "extracted_text": extracted_text,
         "summary": summary,
     })
 
+def generate_mcqs_with_gemini(summary_text, num_questions, difficulty):
+    """Generate multiple-choice questions dynamically based on the summary."""
+
+    model = genai.GenerativeModel("gemini-2.0-flash-lite")
+    
+    prompt = f"""
+    Generate {num_questions} multiple-choice questions based on the following summary. 
+    The questions should be {difficulty} level.
+
+    - Each question must have four answer choices (A, B, C, D).
+    - Clearly mark the correct answer.
+    - The format should be:
+      
+      Question: ...
+      A) ...
+      B) ...
+      C) ...
+      D) ...
+      Correct Answer: X
+    
+    Summary: {summary_text}
+    """
+    response = model.generate_content(prompt, generation_config=generation_config)
+    return response.text if response.text else "No MCQs generated."
+
+def parse_mcq_response(mcq_text):
+    """Extract MCQs from AI-generated response."""
+    mcqs = []
+    questions = mcq_text.split("Question: ")[1:]  # Split based on "Question: "
+
+    for q in questions:
+        lines = q.strip().split("\n")
+        if len(lines) >= 6:
+            question = lines[0]
+            option_a = lines[1][3:].strip()  # Remove "A) "
+            option_b = lines[2][3:].strip()  # Remove "B) "
+            option_c = lines[3][3:].strip()  # Remove "C) "
+            option_d = lines[4][3:].strip()  # Remove "D) "
+            correct_option = lines[5][-1].strip()  # Last character of "Correct Answer: X"
+
+            mcqs.append({
+                "question": question,
+                "option_a": option_a,
+                "option_b": option_b,
+                "option_c": option_c,
+                "option_d": option_d,
+                "correct_option": correct_option,
+            })
+    return mcqs
+
 def quiz_options(request, file_id):
-    """Display a form for selecting quiz options (number of questions and difficulty)."""
-    file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
-    
-    return render(request, "result/quiz_options.html", {"file": file})
-
-def generate_quiz(request, file_id):
-    """Generate MCQs from the extracted text based on user-selected options and store quiz in session."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
-    file_path = uploaded_file.file.path
-    if file_path.lower().endswith(".pdf"):
-        extracted_text = extract_text_from_pdf(file_path)
-    elif file_path.lower().endswith(".txt"):
-        extracted_text = extract_text_from_txt(file_path)
-    else:
-        extracted_text = "Unsupported file type."
-    
-    if not extracted_text or extracted_text == "Unsupported file type.":
-        return render(request, "result/quiz_error.html", {"error": "No text could be extracted."})
-    
-    if request.method == "POST":
-        num_questions = int(request.POST.get("num_questions", 10))
-        difficulty = request.POST.get("difficulty", "easy")
-        mcqs = generate_mcqs(extracted_text, num_questions, difficulty)
-        request.session["quiz"] = mcqs
-        return redirect("quiz_display", file_id=uploaded_file.id)
-    else:
-        return redirect("quiz_options", {'file': uploaded_file})
 
-def quiz_display(request, file_id):
-    """Display the generated quiz with radio buttons for answer selection."""
+    return render(request, "result/quiz_options.html", {"file": uploaded_file})
+
+def take_quiz(request, file_id):
+    """Generates and displays the quiz."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
-    quiz = request.session.get("quiz")
-    if not quiz:
-        return redirect("summary", file_id=uploaded_file.id)
-    return render(request, "result/quiz.html", {"quiz": quiz})
+    summary_instance = get_object_or_404(Summary, uploaded_file=uploaded_file)
 
-def evaluate_quiz(request):
-    """Evaluate the submitted quiz, calculate score percentage, and render results with color-coded feedback."""
-    quiz = request.session.get("quiz")
-    if not quiz:
-        return redirect("upload")
-    total = len(quiz)
+    num_questions = int(request.GET.get("num_questions", 10))
+    difficulty = request.GET.get("difficulty", "medium").lower()
+
+    # Generate MCQs on the fly
+    mcq_text = generate_mcqs_with_gemini(summary_instance.summary_text, num_questions, difficulty)
+    mcqs = parse_mcq_response(mcq_text)
+    random.shuffle(mcqs)
+
+    request.session['mcqs'] = mcqs  # Store MCQs in session for later use
+
+    return render(request, "result/quiz.html", {"mcqs": mcqs, "file": uploaded_file})
+
+def submit_quiz(request, file_id):
+    """Handles quiz submission and calculates the score."""
+    uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+    mcqs = request.session.get("mcqs", [])  # Retrieve MCQs from session
+
+    user_answers = request.POST
     correct_count = 0
     results = []
-    for idx, question in enumerate(quiz):
-        user_answer = request.POST.get(f"question_{idx}")
-        is_correct = (user_answer == question.get("correct_answer"))
+
+
+    for index, mcq in enumerate(mcqs):
+        user_choice = user_answers.get(str(index), "")
+        option_mapping = {
+            "A": mcq["option_a"],
+            "B": mcq["option_b"],
+            "C": mcq["option_c"],
+            "D": mcq["option_d"],
+        }
+        user_choice_text = option_mapping.get(user_choice, "")
+        correct_answer_text = option_mapping.get(mcq["correct_option"], "")
+        is_correct = user_choice == mcq["correct_option"]
         if is_correct:
             correct_count += 1
         results.append({
-            "question": question.get("question"),
-            "options": question.get("options"),
-            "correct_answer": question.get("correct_answer"),
-            "user_answer": user_answer,
+            "question": mcq["question"],
+            "user_choice": user_choice_text,
+            "correct_choice": correct_answer_text,
             "is_correct": is_correct,
+            "options": [mcq["option_a"], mcq["option_b"], mcq["option_c"], mcq["option_d"]],
         })
-    score_percentage = (correct_count / total) * 100 if total > 0 else 0
-    return render(request, "result/quiz_result.html", {
-        "results": results,
-        "score": score_percentage,
-        "total": total,
-        "correct": correct_count,
-    })
+
+    score = (correct_count / len(mcqs)) * 100 if mcqs else 0
+
+    return render(request, "result/quiz_result.html", {"mcqs":mcqs, "results": results, "score": score, "file": uploaded_file})
+
+@csrf_exempt
+def chat_with_summary(request, file_id):
+    """Handles chatbot conversation based on the summary."""
+    if request.method == "POST":
+        data = json.loads(request.body)
+        user_message = data.get("message", "").strip()
+
+        if not user_message:
+            return JsonResponse({"error": "Message cannot be empty"}, status=400)
+
+        uploaded_file = UploadedFile.objects.filter(id=file_id, user=request.user).first()
+        summary_instance = Summary.objects.filter(uploaded_file=uploaded_file).first()
+
+        if not summary_instance:
+            return JsonResponse({"error": "Summary not found"}, status=404)
+
+        summary_text = summary_instance.summary_text
+
+        # Prepare the chatbot prompt
+        prompt = f"""
+        You are an AI assistant helping users understand and discuss a summary. 
+        The summary content is as follows:
+
+        {summary_text}
+
+        User's question: {user_message}
+
+        Provide a helpful, structured answer based only on the summary above.
+        """
+
+        model = genai.GenerativeModel("gemini-2.0-flash-lite")
+        response = model.generate_content(prompt)
+
+        bot_response = response.text if response.text else "I'm sorry, I couldn't generate a response."
+
+        return JsonResponse({"response": bot_response})
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)

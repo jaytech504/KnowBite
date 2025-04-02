@@ -1,7 +1,7 @@
 {% extends 'result/base_result.html' %}
 {% block result %}
     <h2>Generate Quiz</h2>
-    <form method="post" action="{% url 'generate_quiz' file.id %}">
+    <form method="post" action="{% url 'take_quiz' file.id %}">
         {% csrf_token %}
         <label for="num_questions">Number of Questions:</label>
         <select name="num_questions" id="num_questions" required>

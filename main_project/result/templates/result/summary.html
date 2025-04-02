@@ -3,9 +3,82 @@
 {% block result %}
 <div class="col-md-9 col-lg-10 main-content">
     <div class="container">
-        <div class="summary-container">
-                {{ summary | safe | markdownify }}
+        <div class="summary-content" style="white-space: pre-line; line-height: 1.1;">
+
+<!-- Regenerate Section -->
+<div class="regenerate-section">
+    <button id="regenerateBtn" class="btn btn-regenerate">
+        <span class="icon">⟳</span>
+        Regenerate Summary
+    </button>
+    <div class="loading-indicator" style="display: none;">
+        <div class="spinner"></div>
+        <span class="loading-text">Generating new summary...</span>
+    </div>
+</div>
+    <div class="summary-text" id="summaryContent">
+                {{ summary | markdownify | safe }}
+    </div>
+    <div id="regenerateConfirm" class="confirm-dialog" style="display: none;">
+        <div class="dialog-content">
+            <p>Are you sure you want to regenerate the summary?</p>
+            <div class="dialog-buttons">
+                <button id="confirmRegenerate" class="dialog-btn confirm-btn">Yes, Regenerate</button>
+                <button id="cancelRegenerate" class="dialog-btn cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
           </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('regenerateBtn');
+        const confirmDialog = document.getElementById('regenerateConfirm');
+        const loadingIndicator = document.querySelector('.loading-indicator');
+        
+        // Confirmation Dialog Handlers
+        btn.addEventListener('click', function() {
+            confirmDialog.style.display = 'block';
+        });
+    
+        document.getElementById('confirmRegenerate').addEventListener('click', function() {
+            confirmDialog.style.display = 'none';
+            startRegeneration();
+        });
+    
+        document.getElementById('cancelRegenerate').addEventListener('click', function() {
+            confirmDialog.style.display = 'none';
+        });
+    
+        // AJAX Regeneration
+        function startRegeneration() {
+            btn.classList.add('loading');
+            loadingIndicator.style.display = 'flex';
+            
+            fetch(`{% url 'summary' file_id=file.id %}?regenerate=true`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Convert markdown to HTML if needed
+                    const processedHtml = marked.parse(data.summary);
+                    document.getElementById('summaryContent').innerHTML = processedHtml;
+                }
+            })
+            .catch(error => {
+                alert('Request failed: ' + error.message);
+            })
+            .finally(() => {
+                btn.classList.remove('loading');
+                loadingIndicator.style.display = 'none';
+            });
+        }
+    });
+    </script>
 {% endblock %}

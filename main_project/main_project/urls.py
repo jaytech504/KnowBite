@@ -29,9 +29,8 @@ urlpatterns = [
     path('register/', users_views.register, name='register'),
     path('summary/<int:file_id>/', result_views.summary_result, name='summary'),
     path("quiz/<int:file_id>/options/", result_views.quiz_options, name="quiz_options"),
-    path("quiz/<int:file_id>/generate/", result_views.generate_quiz, name="generate_quiz"),
-    path("quiz/<int:file_id>/display/", result_views.quiz_display, name="quiz_display"),
-    path("quiz/submit/", result_views.evaluate_quiz, name="evaluate_quiz"),
+    path("quiz/<int:file_id>/generate/", result_views.take_quiz, name="take_quiz"),
+    path("quiz/<int:file_id>/display/", result_views.submit_quiz, name="submit_quiz"),
 ] 
 
 if settings.DEBUG:

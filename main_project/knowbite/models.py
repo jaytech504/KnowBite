@@ -20,3 +20,12 @@ class UploadedFile(models.Model):
 
     def filename(self):
         return os.path.basename(self.file.name)
+
+class Summary(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_file = models.OneToOneField(UploadedFile, on_delete=models.CASCADE)
+    summary_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Summary for {self.uploaded_file.file.name} by {self.user.username}"
