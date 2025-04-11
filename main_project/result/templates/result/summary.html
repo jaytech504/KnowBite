@@ -3,7 +3,7 @@
 {% block result %}
 <div class="col-md-9 col-lg-10 main-content">
     <div class="container">
-        <div class="summary-content" style="white-space: pre-line; line-height: 1.1;">
+        <div class="summary-content">
 
 <!-- Regenerate Section -->
 <div class="regenerate-section">
@@ -17,8 +17,23 @@
     </div>
 </div>
     <div class="summary-text" id="summaryContent">
-                {{ summary | markdownify | safe }}
+                {{ summary | safe }}
     </div>
+    <aside id="gemini-chatbot-container" class="chatbot-sidebar">
+        <h2>Gemini Chatbot</h2>
+        <div id="chat-messages">
+            {% for message in chat_history %}
+                <div class="message {{ message.role }}">{{ message.formatted_content|safe }}</div>
+            {% empty %}
+                <p>No chat history yet.</p>
+            {% endfor %}
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-message" placeholder="Ask me about the summary...">
+            <button id="send-button">Send</button>
+        </div>
+        <div id="loading-indicator">Generating response...</div>
+    </aside>
     <div id="regenerateConfirm" class="confirm-dialog" style="display: none;">
         <div class="dialog-content">
             <p>Are you sure you want to regenerate the summary?</p>

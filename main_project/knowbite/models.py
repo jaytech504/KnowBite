@@ -29,3 +29,17 @@ class Summary(models.Model):
 
     def __str__(self):
         return f"Summary for {self.uploaded_file.file.name} by {self.user.username}"
+    
+
+class ChatMessage(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    file = models.ForeignKey('UploadedFile', on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=[('user', 'User'), ('bot', 'Bot')])
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['timestamp'] # Order by timestamp by default
+
+    def __str__(self):
+        return f'{self.role.capitalize()}: {self.content[:50]}...'

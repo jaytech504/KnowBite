@@ -3,14 +3,15 @@ import random
 import re
 import time
 import requests
-import fitz         # PyMuPDF for PDF extraction
-import pytesseract  # For OCR fallback
+import fitz     # PyMuPDF for PDF extraction
+import pytesseract
+import markdown  
 from PIL import Image
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.shortcuts import render, get_object_or_404, redirect
-from knowbite.models import UploadedFile, Summary
+from knowbite.models import UploadedFile, Summary, ChatMessage
 from transformers import AutoTokenizer
 from django.utils.safestring import mark_safe
 import google.generativeai as genai
@@ -19,12 +20,13 @@ import google.generativeai as genai
 # Set up Gemini API client
 GEMINI_API_KEY = "AIzaSyBEH5_BKeu6wQsfWQz8lnN14xdqqQMuUtY"  
 genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-2.0-flash-lite")
 
 generation_config = {
     "temperature": 0.7,  # Adjust creativity level
     "top_p": 0.9,
     "top_k": 50,
-    "max_output_tokens": 5000,
+    "max_output_tokens": 2500,
 }
 # -------------------------------------------------------------------
 # Helper Functions: Text Extraction using PyMuPDF
@@ -51,9 +53,6 @@ def extract_text_from_txt(txt_path):
 
 def generate_summary_with_gemini(text):
     """Send extracted text to Gemini API and get structured summary."""
-
-    
-    model = genai.GenerativeModel("gemini-2.0-flash-lite")
 
     prompt = f"""
     You are an expert summarizer. 
@@ -103,6 +102,7 @@ def summary_result(request, file_id):
 
     if summary_instance and "regenerate" not in request.GET:
         summary = summary_instance.summary_text
+        formatted_summary = markdown.markdown(summary)
     else:
         if file_path.lower().endswith(".pdf"):
             extracted_text = extract_text_from_pdf(file_path)
@@ -114,8 +114,10 @@ def summary_result(request, file_id):
         if extracted_text and extracted_text != "Unsupported file type.":
             if len(extracted_text) > 3000:
                 summary = generate_long_summary(extracted_text)
+                formatted_summary = markdown.markdown(summary)
             else:
                 summary = generate_summary_with_gemini(extracted_text)
+                formatted_summary = markdown.markdown(summary)
         else:
             summary = "No text could be extracted from the file."
 
@@ -132,17 +134,70 @@ def summary_result(request, file_id):
                 'timestamp': time.time()
             })
         return redirect('summary', file_id=file_id)
+
+    chat = model.start_chat()
     
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.POST.get('message'):
+        
+        user_message = request.POST.get('message')
+        
+        # Get previous chat messages for context
+        previous_messages = ChatMessage.objects.filter(
+            user=request.user, 
+            file=uploaded_file
+        ).order_by('timestamp')
+        
+        # Check if this is the first message
+        first_turn = not previous_messages.filter(role='user').exists()
+        
+        if first_turn:
+            full_user_message = f"""You are a helpful teacher assisting students with a summary of a document.
+            The summary is: ```{summary}``` 
+            Answer the student's question based on the context in the summary.
+            You can add extra knowledge even if not in the summary but is related.
+            Keep most answers concise only if it is necessary to be long.
+            Be conversational and friendly.
+            If the question is not related to the summary, politely say you can only answer questions about the notes.
+            User: {user_message}"""
+        else:
+            # For subsequent messages, we can just use the user's message
+            # as we'll rebuild context from the database
+            full_user_message = user_message
+            
+            # Add previous messages to the chat history
+            for msg in previous_messages:
+                if msg.role == 'user':
+                    chat.history.append({"role": "user", "parts": [msg.content]})
+                else:
+                    chat.history.append({"role": "model", "parts": [msg.content]})
+        
+        try:
+            ChatMessage.objects.create(user=request.user, file=uploaded_file, role='user', content=user_message)
+            response = chat.send_message(full_user_message, generation_config=generation_config)
+            chatbot_response = response.text
+            
+            # Store bot response in database
+            ChatMessage.objects.create(user=request.user, file=uploaded_file, role='bot', content=chatbot_response)
+            
+            return JsonResponse({'response': chatbot_response})
+        except Exception as e:
+            print(f"Gemini API Error: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+    # Retrieve the last 10 chat messages for display
+    last_10_chats = ChatMessage.objects.filter(user=request.user, file=uploaded_file).order_by('-timestamp')[:10][::-1]
+
+    for message in last_10_chats:
+        message.formatted_content = markdown.markdown(message.content)
 
     return render(request, "result/summary.html", {
         "file": uploaded_file,
-        "summary": summary,
+        "summary": formatted_summary,
+        "chat_history": last_10_chats
     })
 
 def generate_mcqs_with_gemini(summary_text, num_questions, difficulty):
     """Generate multiple-choice questions dynamically based on the summary."""
-
-    model = genai.GenerativeModel("gemini-2.0-flash-lite")
     
     prompt = f"""
     Generate {num_questions} multiple-choice questions based on the following summary. 
@@ -246,41 +301,3 @@ def submit_quiz(request, file_id):
 
     return render(request, "result/quiz_result.html", {"mcqs":mcqs, "results": results, "score": score, "file": uploaded_file})
 
-@csrf_exempt
-def chat_with_summary(request, file_id):
-    """Handles chatbot conversation based on the summary."""
-    if request.method == "POST":
-        data = json.loads(request.body)
-        user_message = data.get("message", "").strip()
-
-        if not user_message:
-            return JsonResponse({"error": "Message cannot be empty"}, status=400)
-
-        uploaded_file = UploadedFile.objects.filter(id=file_id, user=request.user).first()
-        summary_instance = Summary.objects.filter(uploaded_file=uploaded_file).first()
-
-        if not summary_instance:
-            return JsonResponse({"error": "Summary not found"}, status=404)
-
-        summary_text = summary_instance.summary_text
-
-        # Prepare the chatbot prompt
-        prompt = f"""
-        You are an AI assistant helping users understand and discuss a summary. 
-        The summary content is as follows:
-
-        {summary_text}
-
-        User's question: {user_message}
-
-        Provide a helpful, structured answer based only on the summary above.
-        """
-
-        model = genai.GenerativeModel("gemini-2.0-flash-lite")
-        response = model.generate_content(prompt)
-
-        bot_response = response.text if response.text else "I'm sorry, I couldn't generate a response."
-
-        return JsonResponse({"response": bot_response})
-
-    return JsonResponse({"error": "Invalid request method"}, status=405)
