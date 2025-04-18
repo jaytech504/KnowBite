@@ -8,7 +8,7 @@
                 {% for file in files %}
                     {% if file.file %}
                      {% if file.file_type == 'audio' %}
-                <a href="#" class="content-card">
+                <a href="{% url 'summary' file.id %}" class="content-card">
                     <i class="bi bi-headphones card-icon"></i>
                     <div>
                         <h5 class="mb-1">{{ file.filename }}</h5>

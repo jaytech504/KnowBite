@@ -351,7 +351,51 @@ body.dark-mode .large-icon {
     animation: spin 1s linear infinite;
 }
 
+.summary-loading {
+    opacity: 0.7;
+    position: relative;
+}
 
+.summary-loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, #4CAF50, #2196F3);
+    animation: loading 1.5s infinite;
+}
+
+.summary-updated {
+    animation: highlight 2s;
+}
+
+@keyframes loading {
+    0% { width: 0; }
+    100% { width: 100%; }
+}
+
+@keyframes highlight {
+    0% { background-color: rgba(76, 175, 80, 0.3); }
+    100% { background-color: transparent; }
+}
+
+.error-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #f44336;
+    color: white;
+    padding: 12px;
+    border-radius: 4px;
+    z-index: 1000;
+    transition: opacity 0.3s;
+}
+
+.error-toast.fade-out {
+    opacity: 0;
+}
 .chatbot-sidebar {
     flex: 1;
     background-color: #f0f2f5; /* Light background for the sidebar */

@@ -1,3 +1,16 @@
+window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+
+  
+
 document.addEventListener('DOMContentLoaded', function() {
     const userMessageInput = document.getElementById('user-message');
     const sendButton = document.getElementById('send-button');
@@ -12,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Enter') {
             sendMessage();
         }
+
+    MathJax.typesetPromise(document.querySelectorAll('.message.bot'));
     });
     function addBotMessage(content) {
         const botMessageElement = document.createElement('div');
@@ -21,8 +36,10 @@ document.addEventListener('DOMContentLoaded', function() {
         botMessageElement.innerHTML = marked.parse(content);
         chatMessages.appendChild(botMessageElement);
         
-        // Scroll to bottom of chat
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        MathJax.typesetPromise([botMessageElement]).then(() => {
+            // Scroll to bottom of chat after rendering is complete
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
     }
     function sendMessage() {
         const message = userMessageInput.value.trim();
@@ -110,5 +127,60 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         return cookieValue;
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('regenerateBtn');
+    const confirmDialog = document.getElementById('regenerateConfirm');
+    const loadingIndicator = document.querySelector('.loading-indicator');
+    
+    // Confirmation Dialog Handlers
+    btn.addEventListener('click', function() {
+        confirmDialog.style.display = 'block';
+    });
+
+    document.getElementById('confirmRegenerate').addEventListener('click', function() {
+        confirmDialog.style.display = 'none';
+        startRegeneration();
+    });
+
+    document.getElementById('cancelRegenerate').addEventListener('click', function() {
+        confirmDialog.style.display = 'none';
+    });
+
+    // AJAX Regeneration
+    function startRegeneration() {
+        btn.classList.add('loading');
+        loadingIndicator.style.display = 'flex';
+        
+        fetch(`/summary/${fileId}/?regenerate=true`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Convert markdown to HTML if needed
+                const processedHtml = marked.parse(data.summary);
+                document.getElementById('summaryContent').innerHTML = processedHtml;
+
+                if (typeof MathJax !== 'undefined') {
+                    MathJax.typesetPromise([summaryContent]).catch(err => {
+                        console.error('MathJax rendering error:', err);
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            alert('Request failed: ' + error.message);
+        })
+        .finally(() => {
+            btn.classList.remove('loading');
+            loadingIndicator.style.display = 'none';
+        });
     }
 });

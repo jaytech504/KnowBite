@@ -3,8 +3,11 @@ import random
 import re
 import time
 import requests
-import fitz     # PyMuPDF for PDF extraction
+import pdfplumber
+import fitz  # PyMuPDF
+from pdf2image import convert_from_path, convert_from_bytes
 import pytesseract
+import io
 import markdown  
 from PIL import Image
 from django.http import JsonResponse, StreamingHttpResponse
@@ -15,36 +18,72 @@ from knowbite.models import UploadedFile, Summary, ChatMessage
 from transformers import AutoTokenizer
 from django.utils.safestring import mark_safe
 import google.generativeai as genai
+import assemblyai as aai
 
-
+ASSEMBLYAI_API_KEY = "84d0010657a54ae2a427ed61d7111b65"
+aai.settings.api_key = ASSEMBLYAI_API_KEY
 # Set up Gemini API client
 GEMINI_API_KEY = "AIzaSyBEH5_BKeu6wQsfWQz8lnN14xdqqQMuUtY"  
 genai.configure(api_key=GEMINI_API_KEY)
+
 model = genai.GenerativeModel("gemini-2.0-flash-lite")
 
 generation_config = {
     "temperature": 0.7,  # Adjust creativity level
     "top_p": 0.9,
     "top_k": 50,
-    "max_output_tokens": 2500,
+    "max_output_tokens": 1500,
 }
+
+SYSTEM_BASE = """You are a helpful teacher assisting students. Follow these rules:
+1. Answer based on the document summary and chat history
+2. Format math with LaTeX: $inline$ and $$display$$
+3. Add relevant extra knowledge when helpful
+4. Keep answers under 150 words
+5. Be friendly and use occasional emojis
+6. If question is unrelated, politely decline
+Current Document Summary: {summary}"""
 # -------------------------------------------------------------------
 # Helper Functions: Text Extraction using PyMuPDF
 # -------------------------------------------------------------------
 def extract_text_from_pdf(pdf_path):
     """Extract text from a PDF using PyMuPDF (fitz)."""
     text = ""
-    doc = fitz.open(pdf_path)
-    for page in doc:
-        page_text = page.get_text("text")
-        if page_text and page_text.strip():
-            text += page_text + "\n"
-        else:
-            # Fallback to OCR for scanned pages
-            pil_image = page.get_pixmap(dpi=300).pil_image()
-            ocr_text = pytesseract.image_to_string(pil_image)
-            text += ocr_text + "\n"
-    return text.strip() if text else None
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            text = ""
+            for page in pdf.pages:
+                page_text = page.extract_text() or ""
+                text += page_text
+            
+            if len(text.strip()) > 100:
+                return text
+    except Exception:
+        pass
+    
+    # For PyMuPDF
+    try:
+        doc = fitz.open(pdf_path)
+        text = ""
+        for page in doc:
+            text += page.get_text()
+            
+        if len(text.strip()) > 100:
+            return text
+    except Exception:
+        pass
+    
+    # For OCR
+    try:
+        images = convert_from_path(pdf_path)
+        text = ""
+        for image in images:
+            text += pytesseract.image_to_string(image, config='--psm 6') + "\n"
+            
+        return text
+    except Exception as e:
+        raise Exception(f"Failed to extract text from PDF: {str(e)}")
+
 
 def extract_text_from_txt(txt_path):
     """Extract text from a TXT file."""
@@ -55,14 +94,16 @@ def generate_summary_with_gemini(text):
     """Send extracted text to Gemini API and get structured summary."""
 
     prompt = f"""
-    You are an expert summarizer. 
+    You are an expert summarizer on educational content. 
     Summarize the following text in a **engaging and reader-friendly** with:
-    - Use bold and clear **section headers** (like Introduction, Key Points, Conclusion).
+    - Use bold and clear **section headers** (like Introduction, Key Points, Conclusion) using <h4> html tags.
     - Use **clear headings and bullet points**.
     - Keep it **concise yet informative**.
+    - When including mathematical formulas, please format them using LaTeX notation enclosed within dollar signs ($).
+      For example, for an equation like 'y equals x squared', you should output '$y = x^2$'. 
+      For subscripts, use 'a_i', for superscripts use 'b^2' and other complex ones like summation, intergrals etc.
     - Include examples and explanations where needed.
     - Use appropriate emojis before a section header.
-    - Ensure the summary is **professional, easy to scan and visually appealing**.
     - A **concise conclusion** summarizing the main ideas.
     
     Text: {text}
@@ -95,38 +136,13 @@ def base(request, file_id):
     return render(request, "result/base_result.html", {"file": file})
 
 def summary_result(request, file_id):
-    """Extracts text from the uploaded file and generates a structured summary."""
+    """Handle document summary and chat interactions"""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
     summary_instance = Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
-    file_path = uploaded_file.file.path
-
-    if summary_instance and "regenerate" not in request.GET:
-        summary = summary_instance.summary_text
-        formatted_summary = markdown.markdown(summary)
-    else:
-        if file_path.lower().endswith(".pdf"):
-            extracted_text = extract_text_from_pdf(file_path)
-        elif file_path.lower().endswith(".txt"):
-            extracted_text = extract_text_from_txt(file_path)
-        else:
-            extracted_text = "Unsupported file type."
-
-        if extracted_text and extracted_text != "Unsupported file type.":
-            if len(extracted_text) > 3000:
-                summary = generate_long_summary(extracted_text)
-                formatted_summary = markdown.markdown(summary)
-            else:
-                summary = generate_summary_with_gemini(extracted_text)
-                formatted_summary = markdown.markdown(summary)
-        else:
-            summary = "No text could be extracted from the file."
-
-        if summary_instance:
-            summary_instance.summary_text = summary
-            summary_instance.save()
-        else:
-            Summary.objects.create(user=request.user, uploaded_file=uploaded_file, summary_text=summary)
-
+    
+    # Handle summary generation/retrieval
+    if not summary_instance or "regenerate" in request.GET:
+        summary = generate_or_retrieve_summary(request, uploaded_file)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
                 'success': True,
@@ -134,68 +150,118 @@ def summary_result(request, file_id):
                 'timestamp': time.time()
             })
         return redirect('summary', file_id=file_id)
-
-    chat = model.start_chat()
+    else:
+        summary = summary_instance.summary_text
     
-    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.POST.get('message'):
-        
-        user_message = request.POST.get('message')
-        
-        # Get previous chat messages for context
-        previous_messages = ChatMessage.objects.filter(
-            user=request.user, 
-            file=uploaded_file
-        ).order_by('timestamp')
-        
-        # Check if this is the first message
-        first_turn = not previous_messages.filter(role='user').exists()
-        
-        if first_turn:
-            full_user_message = f"""You are a helpful teacher assisting students with a summary of a document.
-            The summary is: ```{summary}``` 
-            Answer the student's question based on the context in the summary.
-            You can add extra knowledge even if not in the summary but is related.
-            Keep most answers concise only if it is necessary to be long.
-            Be conversational and friendly.
-            If the question is not related to the summary, politely say you can only answer questions about the notes.
-            User: {user_message}"""
-        else:
-            # For subsequent messages, we can just use the user's message
-            # as we'll rebuild context from the database
-            full_user_message = user_message
-            
-            # Add previous messages to the chat history
-            for msg in previous_messages:
-                if msg.role == 'user':
-                    chat.history.append({"role": "user", "parts": [msg.content]})
-                else:
-                    chat.history.append({"role": "model", "parts": [msg.content]})
-        
-        try:
-            ChatMessage.objects.create(user=request.user, file=uploaded_file, role='user', content=user_message)
-            response = chat.send_message(full_user_message, generation_config=generation_config)
-            chatbot_response = response.text
-            
-            # Store bot response in database
-            ChatMessage.objects.create(user=request.user, file=uploaded_file, role='bot', content=chatbot_response)
-            
-            return JsonResponse({'response': chatbot_response})
-        except Exception as e:
-            print(f"Gemini API Error: {e}")
-            return JsonResponse({'error': str(e)}, status=500)
+    formatted_summary = markdown.markdown(summary) if summary else "No summary available"
 
-    # Retrieve the last 10 chat messages for display
-    last_10_chats = ChatMessage.objects.filter(user=request.user, file=uploaded_file).order_by('-timestamp')[:10][::-1]
+    # Handle chat interactions
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return handle_chat_request(request, uploaded_file, summary)
+    
+    # Display page with history
+    chat_history = ChatMessage.objects.filter(
+        user=request.user, 
+        file=uploaded_file
+    ).order_by('-timestamp')[:10][::-1]
 
-    for message in last_10_chats:
+    for message in chat_history:
         message.formatted_content = markdown.markdown(message.content)
-
+    
     return render(request, "result/summary.html", {
         "file": uploaded_file,
         "summary": formatted_summary,
-        "chat_history": last_10_chats
+        "chat_history": chat_history
     })
 
+def generate_or_retrieve_summary(request, uploaded_file):
+    """Generate or retrieve document summary"""
+    file_path = uploaded_file.file.path
+    extracted_text = ""
+    
+    if file_path.lower().endswith(".pdf"):
+        extracted_text = extract_text_from_pdf(file_path)
+    elif file_path.lower().endswith(".txt"):
+        extracted_text = extract_text_from_txt(file_path)
+    elif file_path.lower().endswith((".wav", ".mp3", ".ogg", ".m4a")):
+        extracted_text = transcribe_audio_assemblyai(file_path)
+    
+    if not extracted_text:
+        return "No text could be extracted from the file."
+    
+    summary = generate_long_summary(extracted_text) if len(extracted_text) > 3000 else generate_summary_with_gemini(extracted_text)
+    
+    if summary_instance := Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first():
+        summary_instance.summary_text = summary
+        summary_instance.save()
+    else:
+        Summary.objects.create(user=request.user, uploaded_file=uploaded_file, summary_text=summary)
+    
+    return summary
+
+def handle_chat_request(request, uploaded_file, summary):
+    """Process chat messages with Gemini"""
+    user_message = request.POST.get('message').strip()
+    if not user_message:
+        return JsonResponse({'error': 'Empty message'}, status=400)
+
+    # Get document summary once
+    summary_text = Summary.objects.filter(
+        user=request.user, 
+        uploaded_file=uploaded_file
+    ).values_list('summary_text', flat=True).first() or "No summary available"
+
+    # Create system instruction with summary
+    system_instruction = SYSTEM_BASE.format(summary=summary_text)
+
+    # Get last 3 exchanges (6 messages)
+    history_messages = ChatMessage.objects.filter(
+        user=request.user,
+        file=uploaded_file
+    ).order_by('-timestamp')[:6]
+
+    # Format history for Gemini
+    history = []
+    for msg in reversed(history_messages):
+        history.append({
+            "role": "user" if msg.role == "user" else "model",
+            "parts": [msg.content]
+        })
+
+    try:
+        # Initialize model with system instruction
+        model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash-lite",
+            system_instruction=system_instruction
+        )
+        chat = model.start_chat(history=history)
+
+        # Store user message
+        ChatMessage.objects.create(
+            user=request.user,
+            file=uploaded_file,
+            role='user',
+            content=user_message
+        )
+        
+        # Get response
+        response = chat.send_message(user_message)
+        bot_response = response.text
+
+        # Store bot response
+        ChatMessage.objects.create(
+            user=request.user,
+            file=uploaded_file,
+            role='bot',
+            content=bot_response
+        )
+
+        return JsonResponse({'response': bot_response})
+
+    except Exception as e:
+        print(f"Chat error: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+    
 def generate_mcqs_with_gemini(summary_text, num_questions, difficulty):
     """Generate multiple-choice questions dynamically based on the summary."""
     
@@ -301,3 +367,16 @@ def submit_quiz(request, file_id):
 
     return render(request, "result/quiz_result.html", {"mcqs":mcqs, "results": results, "score": score, "file": uploaded_file})
 
+def transcribe_audio_assemblyai(audio_file_path):
+    """Transcribes audio from a file path using AssemblyAI."""
+    try:
+        transcriber = aai.Transcriber()
+        transcript = transcriber.transcribe(audio_file_path)
+        if transcript.error:
+            return f"AssemblyAI Error: {transcript.error}"
+        else:
+            return transcript.text
+    except aai.exceptions.ApiException as e:
+        return f"AssemblyAI API Exception: {e}"
+    except Exception as e:
+        return f"Error during AssemblyAI transcription: {e}"
