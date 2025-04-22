@@ -31,6 +31,8 @@ urlpatterns = [
     path("quiz/<int:file_id>/options/", result_views.quiz_options, name="quiz_options"),
     path("quiz/<int:file_id>/generate/", result_views.take_quiz, name="take_quiz"),
     path("quiz/<int:file_id>/display/", result_views.submit_quiz, name="submit_quiz"),
+    path("chatbot/<int:file_id>/", result_views.chatbot, name='chatbot'),
+    path("transcript/<int:file_id>/", result_views.transcripts, name='transcripts'),
 
 ] 
 

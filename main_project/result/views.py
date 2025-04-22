@@ -14,7 +14,7 @@ from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.shortcuts import render, get_object_or_404, redirect
-from knowbite.models import UploadedFile, Summary, ChatMessage
+from knowbite.models import UploadedFile, Summary, ChatMessage, ExtractedText
 from transformers import AutoTokenizer
 from django.utils.safestring import mark_safe
 import google.generativeai as genai
@@ -177,14 +177,20 @@ def summary_result(request, file_id):
 def generate_or_retrieve_summary(request, uploaded_file):
     """Generate or retrieve document summary"""
     file_path = uploaded_file.file.path
+    summary_instance = Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
+    extracted_text_instance = ExtractedText.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
     extracted_text = ""
-    
-    if file_path.lower().endswith(".pdf"):
-        extracted_text = extract_text_from_pdf(file_path)
-    elif file_path.lower().endswith(".txt"):
-        extracted_text = extract_text_from_txt(file_path)
-    elif file_path.lower().endswith((".wav", ".mp3", ".ogg", ".m4a")):
-        extracted_text = transcribe_audio_assemblyai(file_path)
+
+    if extracted_text_instance is not None:
+        extracted_text = extracted_text_instance.extracted_text
+    else:
+        if file_path.lower().endswith(".pdf"):
+            extracted_text = extract_text_from_pdf(file_path)
+        elif file_path.lower().endswith(".txt"):
+            extracted_text = extract_text_from_txt(file_path)
+        elif file_path.lower().endswith((".wav", ".mp3", ".ogg", ".m4a")):
+            extracted_text = transcribe_audio_assemblyai(file_path)
+        ExtractedText.objects.create(user=request.user, uploaded_file=uploaded_file, extracted_text=extracted_text)
     
     if not extracted_text:
         return "No text could be extracted from the file."
@@ -201,7 +207,11 @@ def generate_or_retrieve_summary(request, uploaded_file):
 
 def handle_chat_request(request, uploaded_file, summary):
     """Process chat messages with Gemini"""
-    user_message = request.POST.get('message').strip()
+    if request.POST.get('message') != None:
+        user_message = request.POST.get('message').strip()
+    else:
+        user_message = request.POST.get('message-chat').strip()
+
     if not user_message:
         return JsonResponse({'error': 'Empty message'}, status=400)
 
@@ -367,6 +377,33 @@ def submit_quiz(request, file_id):
 
     return render(request, "result/quiz_result.html", {"mcqs":mcqs, "results": results, "score": score, "file": uploaded_file})
 
+
+def chatbot(request, file_id):
+    uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+    summary_instance = Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
+
+    summary = summary_instance.summary_text
+
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return handle_chat_request(request, uploaded_file, summary)
+    
+    # Display page with history
+    chat_history = ChatMessage.objects.filter(
+        user=request.user, 
+        file=uploaded_file
+    ).order_by('-timestamp')[:10][::-1]
+
+    for message in chat_history:
+        message.formatted_content = markdown.markdown(message.content)
+
+    context = {
+        "file": uploaded_file,
+        "chat_history": chat_history
+    }
+    return render(request, "result/chatbot.html", context)
+
+
+
 def transcribe_audio_assemblyai(audio_file_path):
     """Transcribes audio from a file path using AssemblyAI."""
     try:
@@ -380,3 +417,19 @@ def transcribe_audio_assemblyai(audio_file_path):
         return f"AssemblyAI API Exception: {e}"
     except Exception as e:
         return f"Error during AssemblyAI transcription: {e}"
+    
+def transcripts(request, file_id):
+    """Display the transcript of the uploaded audio file."""
+    uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+    transcript_instance = ExtractedText.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
+    
+    if not transcript_instance:
+        return JsonResponse({'error': 'Transcript not found'}, status=404)
+
+    transcript_text = transcript_instance.extracted_text
+    formatted_transcript = markdown.markdown(transcript_text) if transcript_text else "No transcript available"
+    
+    return render(request, "result/extracted_text.html", {
+        "file": uploaded_file,
+        "transcript": formatted_transcript
+    })

@@ -1,0 +1,24 @@
+{% extends 'result/base_result.html' %}
+{% load markdownify %}
+{% block result %}
+<div class="col-md-9 col-lg-10 main-content">
+    <div class="container">
+        <aside id="gemini-chatbot-container" class="chatbot-sidebar">
+            <h2>Gemini Chatbot</h2>
+            <div id="chat-messages-chat">
+                {% for message in chat_history %}
+                    <div class="message-chat {{ message.role }}">{{ message.formatted_content|safe }}</div>
+                {% empty %}
+                    <p>No chat history yet.</p>
+                {% endfor %}
+            </div>
+            <div class="chat-input-chat">
+                <input type="text" id="user-message-chat" placeholder="Ask me about the summary...">
+                <button id="send-button-chat">Send</button>
+            </div>
+            <div id="loading-indicator-chat">Generating response...</div>
+        </aside>
+
+    </div>
+</div>
+{% endblock %}

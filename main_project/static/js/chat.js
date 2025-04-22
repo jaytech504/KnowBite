@@ -131,6 +131,125 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
+    const userMessageChat = document.getElementById('user-message-chat');
+    const sendChat = document.getElementById('send-button-chat');
+    const chatMessage = document.getElementById('chat-messages-chat');
+    const loadingIndicators = document.getElementById('loading-indicator-chat');
+    
+    // Hide loading indicator initially
+    loadingIndicators.style.display = 'none';
+    
+    sendChat.addEventListener('click', sendChatMessage);
+    userMessageChat.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
+
+    MathJax.typesetPromise(document.querySelectorAll('.message-chat.bot'));
+    });
+    function addChatMessage(content) {
+        const botMessageChat = document.createElement('div');
+        botMessageChat.className = 'message-chat bot';
+        
+        // Use Marked.js to render markdown
+        botMessageChat.innerHTML = marked.parse(content);
+        chatMessage.appendChild(botMessageChat);
+        
+        MathJax.typesetPromise([botMessageChat]).then(() => {
+            // Scroll to bottom of chat after rendering is complete
+            chatMessage.scrollTop = chatMessage.scrollHeight;
+        });
+    }
+    function sendChatMessage() {
+        const messages = userMessageChat.value.trim();
+        if (!messages) return;
+        
+        // Add user message to chat
+        const userMessageEle = document.createElement('div');
+        userMessageEle.className = 'message-chat user';
+        userMessageEle.textContent = messages;
+        chatMessage.appendChild(userMessageEle);
+        
+        // Clear input
+        userMessageChat.value = '';
+        
+        // Show loading indicator
+        loadingIndicators.style.display = 'block';
+        
+        // Get CSRF token
+        const csrftoken = getCookie('csrftoken');
+        
+        // Prepare form data
+        const formData = new FormData();
+        formData.append('message-chat', messages);
+        
+        // Send request to backend
+        fetch(`/chatbot/${fileId}/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Hide loading indicator
+            loadingIndicators.style.display = 'none';
+            
+            if (data.error) {
+                console.error('Error:', data.error);
+                // Show error message
+                const errorElement = document.createElement('div');
+                errorElement.className = 'message-chat error';
+                errorElement.textContent = 'Sorry, there was an error processing your request.';
+                chatMessage.appendChild(errorElement);
+            } else {
+                // Add bot response to chat
+                addChatMessage(data.response);
+            }
+            
+            // Scroll to bottom of chat
+            chatMessage.scrollTop = chatMessage.scrollHeight;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingIndicators.style.display = 'none';
+            
+            // Show error message
+            const errorElement = document.createElement('div');
+            errorElement.className = 'message-chat error';
+            errorElement.textContent = 'Sorry, there was an error connecting to the server.';
+            chatMessage.appendChild(errorElement);
+            
+            // Scroll to bottom of chat
+            chatMessage.scrollTop = chatMessage.scrollHeight;
+        });
+    }
+    
+    // Function to get CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('regenerateBtn');
     const confirmDialog = document.getElementById('regenerateConfirm');
     const loadingIndicator = document.querySelector('.loading-indicator');
