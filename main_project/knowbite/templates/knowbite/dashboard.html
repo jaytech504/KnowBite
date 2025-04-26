@@ -31,27 +31,37 @@
 
             <!-- Video Upload Card -->
             <div class="col-md-4">
-                <div class="upload-card" onclick="showVideoOptions()">
-                    <i class="bi bi-camera-video upload-icon"></i>
-                    <h4>Video</h4>
-                    <p class="descrip">Upload video or paste YouTube link</p>
+                <div class="upload-card" onclick="showYoutubeInput()">
+                    <i class="bi bi-youtube upload-icon" style="color: #ff0000;"></i>
+                    <h4>YouTube</h4>
+                    <p class="descrip">Paste YouTube link</p>
                 </div>
             </div>
-
-        </div>
         
+        <!-- Hidden File Upload Form -->
         <form method="post" enctype="multipart/form-data" id="upload-form" action="{% url 'upload' %}" style="display: none;">
             {% csrf_token %}
             <input type="hidden" name="file_type" id="file_type">
             <input type="file" name="file" id="file-input" onchange="submitForm()">
         </form>
-
-        <div class="youtube-input" id="youtube-input">
-            <input type="text" name="youtube_link" id="youtube-link" placeholder="Paste YouTube link here">
-            <button onclick="uploadYouTube()">Upload</button>
+        
+        <!-- YouTube Input Form (initially hidden) -->
+        <div class="youtube-input" id="youtube-input" style="display: none; margin-top: 20px;">
+            <form method="post" id="youtube-form" action="{% url 'upload' %}">
+                {% csrf_token %}
+                <input type="hidden" name="file_type" value="youtube">
+                <div class="input-group">
+                    <input type="text" name="youtube_link" id="youtube-link" 
+                           class="form-control" placeholder="Paste YouTube link here" required
+                           pattern="^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-upload"></i> Process
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideYoutubeInput()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            </form>
         </div>
-
-    </div>
-</div>
-
+        
 {% endblock %}

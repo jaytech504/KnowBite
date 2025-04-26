@@ -27,22 +27,44 @@ def upload_file(request):
         file_type = request.POST.get('file_type')
         youtube_link = request.POST.get('youtube_link', '').strip()
 
-        if youtube_link:
-            UploadedFile.objects.create(file_type='youtube', youtube_link=youtube_link, user=request.user)
-            messages.success(request, "Youtube link uploaded successfully")
-            return redirect('dashboard')
+        # Handle YouTube links separately
+        if file_type == 'youtube':
+            if not youtube_link:
+                messages.error(request, "YouTube URL is required")
+                return redirect('dashboard')
+            
+            try:
+                UploadedFile.objects.create(
+                    user=request.user,
+                    file_type='youtube',
+                    youtube_link=youtube_link,
+                    file=None  # Explicitly set file to None
+                )
+                messages.success(request, "YouTube link saved successfully")
+                return redirect('summary')
+            except Exception as e:
+                messages.error(request, f"Error saving YouTube link: {str(e)}")
+                return redirect('dashboard')
 
+        # Handle file uploads
         form = FileUploadForm(request.POST, request.FILES)
         if form.is_valid():
             uploaded_file = form.save(commit=False)
             uploaded_file.user = request.user
+            
+            # Validate file type consistency
+            if uploaded_file.file_type == 'youtube':
+                messages.error(request, "Invalid file type selection")
+                return redirect('dashboard')
+                
             uploaded_file.save()
-            messages.success(request, "File uploaded successfully.")
-
+            messages.success(request, "File uploaded successfully")
             return redirect('summary', file_id=uploaded_file.id)
         else:
-            messages.error(request, "File upload failed. Please check file type.")
-
+            # Improved error messaging
+            errors = "\n".join([f"{field}: {','.join(errors)}" for field, errors in form.errors.items()])
+            messages.error(request, f"Upload failed:\n{errors}")
+    
     return render(request, 'knowbite/dashboard.html')
 
 

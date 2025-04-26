@@ -68,7 +68,7 @@ body.dark-mode #dropdown-head {
     background-color: #1e1e1e;
 }
 
-body.dark-mode .sidebar {
+body.dark-mode #sidebar {
     background-color: #1e1e1e;
 }
 
@@ -117,10 +117,22 @@ body.dark-mode .descrip {
 }
 
 .youtube-input {
-    display: none;
-    margin-top: 20px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
 }
 
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+#youtube-link {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
 .logout {
     color: #dc3545;
     position: fixed;

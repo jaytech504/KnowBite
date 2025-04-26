@@ -2,11 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 import os
 # Create your models here.
+from django.db import models
+import os
+
 class UploadedFile(models.Model):
     FILE_TYPES = [
         ('pdf', 'PDF'),
         ('audio', 'Audio'),
-        ('video', 'Video'),
         ('youtube', 'YouTube'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -16,10 +18,22 @@ class UploadedFile(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.file.name if self.file else self.youtube_link
+        if self.file_type == 'youtube':
+            return f"YouTube: {self.youtube_link}"
+        return os.path.basename(self.file.name) if self.file else "No file"
 
     def filename(self):
-        return os.path.basename(self.file.name)
+        if self.file_type == 'youtube':
+            return self.youtube_link
+        return os.path.basename(self.file.name) if self.file else None
+
+    def save(self, *args, **kwargs):
+        # Validate file type consistency
+        if self.file_type == 'youtube' and not self.youtube_link:
+            raise ValueError("YouTube links require a youtube_link")
+        if self.file_type != 'youtube' and not self.file:
+            raise ValueError("Non-YouTube uploads require a file")
+        super().save(*args, **kwargs)
 
 class Summary(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -28,8 +42,8 @@ class Summary(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Summary for {self.uploaded_file.file.name} by {self.user.username}"
-  
+        return f"Summary for {self.uploaded_file.filename()} by {self.user.username}"
+
 class ExtractedText(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     uploaded_file = models.OneToOneField(UploadedFile, on_delete=models.CASCADE)
@@ -37,7 +51,7 @@ class ExtractedText(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Extracted text for {self.uploaded_file.file.name} by {self.user.username}"
+        return f"Extracted text for {self.uploaded_file.filename()} by {self.user.username}"
 
 class ChatMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

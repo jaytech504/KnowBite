@@ -57,60 +57,52 @@
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        function triggerFileUpload(type) {
-            let fileInput = document.getElementById('file-input');
-            document.getElementById('file_type').value = type;
+        // Show YouTube input field
+    function showYoutubeInput() {
+        document.getElementById('youtube-input').style.display = 'block';
+    }
 
-            if(type === 'pdf') {
-                fileInput.accept = '.pdf, .txt';
-            } else if (type === 'audio') {
-                fileInput.accept = '.mp3, .wav, .ogg, .m4a';
-            }else if (type === 'video') {
-                fileInput.accept = '.mp4, .avi, .mov, .mkv, .flv, .webm';
-            }
+    // Hide YouTube input field
+    function hideYoutubeInput() {
+        document.getElementById('youtube-input').style.display = 'none';
+        document.getElementById('youtube-link').value = '';
+    }
 
-            fileInput.click();
-        }
+    // Trigger file input based on type
+    function triggerFileUpload(fileType) {
+        document.getElementById('file_type').value = fileType;
+        document.getElementById('file-input').accept = getAcceptAttribute(fileType);
+        document.getElementById('file-input').click();
+    }
 
-        function showVideoOptions() {
-            let choice = confirm("Click OK to upload from storage or Cancel to paste a YouTube link.");
-            if (choice) {
-                triggerFileUpload('video');
-            } else {
-                document.getElementById('youtube-input').style.display = 'block';
-            }
-        }
+    // Get accept attribute based on file type
+    function getAcceptAttribute(fileType) {
+        const acceptMap = {
+            'pdf': '.pdf,.txt',
+            'audio': '.mp3,.wav,.ogg,.m4a'
+        };
+        return acceptMap[fileType] || '';
+    }
 
-        function submitForm() {
+    // Submit form when file is selected
+    function submitForm() {
+        const fileInput = document.getElementById('file-input');
+        if (fileInput.files.length > 0) {
             document.getElementById('upload-form').submit();
         }
+    }
 
-        function uploadYouTube() {
-            let link = document.getElementById('youtube-link').value;
-            if (link) {
-                let form = document.createElement('form');
-                form.method = 'post';
-                form.action = "{% url 'upload' %}";
-                form.style.display = 'none';
-
-                let csrf = document.createElement('input');
-                csrf.type = 'hidden';
-                csrf.name = 'csrfmiddlewaretoken';
-                csrf.value = "{{ csrf_token }}";
-
-                let input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'youtube_link';
-                input.value = link;
-
-                form.appendChild(csrf);
-                form.appendChild(input);
-                document.body.appendChild(form);
-                form.submit();
-            } else {
-                alert("Please enter a valid YouTube link.");
-            }
+    // Validate YouTube URL before submission
+    document.getElementById('youtube-form').addEventListener('submit', function(e) {
+        const urlInput = document.getElementById('youtube-link');
+        const youtubeRegex = /^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+        
+        if (!youtubeRegex.test(urlInput.value)) {
+            e.preventDefault();
+            alert('Please enter a valid YouTube URL');
+            urlInput.focus();
         }
+    });
     </script>
 
     <script>

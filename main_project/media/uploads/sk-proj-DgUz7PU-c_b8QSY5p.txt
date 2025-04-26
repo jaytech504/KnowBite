@@ -1,0 +1,52 @@
+﻿ Instrument Transformers
+The d.c. circuits when large currents are to be measured, it is usual to use low-range ammeters
+with suitable shunts. For measuring high voltages, low-range voltmeters are used with high
+resistances connected in series with them. But it is neither convenient nor practical to use this
+method with alternating current and voltage instruments. For this purpose, specially constructed
+accurate ratio instrument transformers are employed in conjunction with standard low-range AC
+instruments. Their purpose is to reduce the line current or supply voltage to a value small enough
+to be easily measured with meters of moderate size and capacity. In other words, they are used for
+extending the range of AC ammeters and voltmeters. Instruments transformers are of two types:
+i) Current transformers (CT)
+ii) Potential or Voltage transformers (VT)
+Advantages of using instrument transformers for range extension of AC meters are as follows:
+1. The instrument is insulated from the line voltage; hence it can be grounded.
+2. The cost of the instrument (or meter) together with the instrument transformer is less than that
+of the instrument alone if it were to be insulated for high voltages.
+3. It is possible to achieve standardization of instruments and meters at secondary ratings of 100–
+120 volts and 5 or 1 amperes.
+4. If necessary, several instruments can be operated from a single transformer and 5 power
+consumed in the measuring circuits is low.
+In using instrument transformers for current (or voltage) measurements, we must know the ratio
+of primary current (or voltage) to the secondary current (or voltage). These ratios give us the
+multiplying factor for finding the primary values from the instrument readings on the secondary side.
+4.1 Current Transformer
+The current transformer (CT) is used for measurement of electric currents. When current in a
+circuit is too high to directly apply to measuring instruments, a current transformer produces a reduced current accurately proportional to the current in the circuit, which can be conveniently
+connected to measuring and recording instruments. It used in conjunction with current measuring
+devices, its primary winding is designed to be connected in series with the line. It is necessary that
+the impedance of the primary winding be made as small as possible. The secondary winding
+consists of more turns than the primary winding. The ratio of primary to the secondary current is
+inversely proportional to the ratio of primary to secondary turns. This transformer is usually stepup transformer in terms of primary to secondary turn ratio.
+In current transformer the load impedance or burden on the secondary is very small, so the current
+transformer operates on short-circuit conditions. The current through the secondary winding
+depends upon the current flowing in the primary winding. A current transformer also isolates the
+measuring instruments from what may be very high voltage in the monitored circuit. Current
+transformers are commonly used in metering and protective relays in the electrical power industry.
+Figure 3.31 show the circuit of current transformer. As seen from the figure the primary winding
+of the transformer is connected in series with the line carrying high current. The secondary of the
+transformer is made up of a large number of turns of fine wire having small cross-section area.
+This is connected to the coil of normal range ammeter.
+4.3 Potential Transformer
+It’s also called Voltage Transformer (VT). The potential transformer is used for measurement of
+high voltages by means of low range voltmeter. Both the primary and secondary windings are
+wound on a high-grade steel, low voltage winding kept next to the earth core and the high voltage
+winding is on the outside. They reduce the voltage to a reasonable operating value. Primary
+winding consists of large numbers of turns while the secondary has a smaller number of turns. The
+primary is connected across the high voltage line while secondary is connected to the low range
+voltmeter coil. The connection of potential transformer is shown in Fig. 4.1. The potential
+transformer is always a step-down transformer.
+As shown in Fig. 4.1, the voltage being measured connect across the primary winding which has
+large number of turns and connected across the circuit. The secondary winding, which has much
+smaller number of turns, is coupled magnetically through the magnetic circuit to the primary winding. The turn ratio is adjusted that secondary voltage is 110V when full-rated primary voltage
+is applied to the primary.

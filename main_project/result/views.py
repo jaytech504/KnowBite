@@ -10,9 +10,13 @@ import pytesseract
 import io
 import markdown  
 from PIL import Image
+from django.contrib import messages
 from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 import json
+from pytube import YouTube
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from knowbite.models import UploadedFile, Summary, ChatMessage, ExtractedText
 from transformers import AutoTokenizer
@@ -20,11 +24,9 @@ from django.utils.safestring import mark_safe
 import google.generativeai as genai
 import assemblyai as aai
 
-ASSEMBLYAI_API_KEY = "84d0010657a54ae2a427ed61d7111b65"
-aai.settings.api_key = ASSEMBLYAI_API_KEY
-# Set up Gemini API client
-GEMINI_API_KEY = "AIzaSyBEH5_BKeu6wQsfWQz8lnN14xdqqQMuUtY"  
-genai.configure(api_key=GEMINI_API_KEY)
+aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
+# Set up Gemini API client  
+genai.configure(api_key=settings.GEMINI_API_KEY)
 
 model = genai.GenerativeModel("gemini-2.0-flash-lite")
 
@@ -46,6 +48,7 @@ Current Document Summary: {summary}"""
 # -------------------------------------------------------------------
 # Helper Functions: Text Extraction using PyMuPDF
 # -------------------------------------------------------------------
+
 def extract_text_from_pdf(pdf_path):
     """Extract text from a PDF using PyMuPDF (fitz)."""
     text = ""
@@ -89,6 +92,8 @@ def extract_text_from_txt(txt_path):
     """Extract text from a TXT file."""
     with open(txt_path, "r", encoding="utf-8") as f:
         return f.read().strip()
+    
+
 
 def generate_summary_with_gemini(text):
     """Send extracted text to Gemini API and get structured summary."""
@@ -116,6 +121,8 @@ def generate_summary_with_gemini(text):
 def split_text(text, max_chars=3000):
     return [text[i:i+max_chars] for i in range(0, len(text), max_chars)]
 
+
+
 def generate_long_summary(text):
     chunks = split_text(text, max_chars=3000)
     chunk_summaries = []
@@ -135,77 +142,132 @@ def base(request, file_id):
 
     return render(request, "result/base_result.html", {"file": file})
 
+@login_required
 def summary_result(request, file_id):
     """Handle document summary and chat interactions"""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+
+    # Handle "regenerate" requests
+    if "regenerate" in request.GET:
+        try:
+            summary = generate_or_retrieve_summary(request, uploaded_file)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'summary': summary,
+                    'timestamp': time.time()
+                })
+            return redirect('summary', file_id=file_id)
+        except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'error': str(e)}, status=500)
+            raise  # Rethrow so you see error in dev mode
+
+    # Handle normal page load
     summary_instance = Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
-    
-    # Handle summary generation/retrieval
-    if not summary_instance or "regenerate" in request.GET:
-        summary = generate_or_retrieve_summary(request, uploaded_file)
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'success': True,
-                'summary': summary,
-                'timestamp': time.time()
-            })
-        return redirect('summary', file_id=file_id)
-    else:
+    if summary_instance:
         summary = summary_instance.summary_text
-    
+    else:
+        try:
+            summary = generate_or_retrieve_summary(request, uploaded_file)
+        except Exception as e:
+            summary = f"Error generating summary: {str(e)}"
+
     formatted_summary = markdown.markdown(summary) if summary else "No summary available"
 
-    # Handle chat interactions
+    # Handle chat message via AJAX
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return handle_chat_request(request, uploaded_file, summary)
-    
-    # Display page with history
+        return handle_chat_request(request, uploaded_file)
+
+    # Chat history display
     chat_history = ChatMessage.objects.filter(
-        user=request.user, 
+        user=request.user,
         file=uploaded_file
     ).order_by('-timestamp')[:10][::-1]
 
-    for message in chat_history:
-        message.formatted_content = markdown.markdown(message.content)
-    
     return render(request, "result/summary.html", {
         "file": uploaded_file,
         "summary": formatted_summary,
-        "chat_history": chat_history
+        "chat_history": [
+            {
+                **msg.__dict__,
+                'formatted_content': markdown.markdown(msg.content)
+            }
+            for msg in chat_history
+        ]
     })
+
+
 
 def generate_or_retrieve_summary(request, uploaded_file):
     """Generate or retrieve document summary"""
-    file_path = uploaded_file.file.path
-    summary_instance = Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
-    extracted_text_instance = ExtractedText.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
+    user = request.user  # Force evaluation of lazy object
+    is_youtube = uploaded_file.file_type == 'youtube'
+    summary_instance = Summary.objects.filter(user=user, uploaded_file=uploaded_file).first()
+    extracted_text_instance = ExtractedText.objects.filter(user=user, uploaded_file=uploaded_file).first()
     extracted_text = ""
 
     if extracted_text_instance is not None:
         extracted_text = extracted_text_instance.extracted_text
     else:
-        if file_path.lower().endswith(".pdf"):
-            extracted_text = extract_text_from_pdf(file_path)
-        elif file_path.lower().endswith(".txt"):
-            extracted_text = extract_text_from_txt(file_path)
-        elif file_path.lower().endswith((".wav", ".mp3", ".ogg", ".m4a")):
-            extracted_text = transcribe_audio_assemblyai(file_path)
-        ExtractedText.objects.create(user=request.user, uploaded_file=uploaded_file, extracted_text=extracted_text)
-    
-    if not extracted_text:
-        return "No text could be extracted from the file."
-    
-    summary = generate_long_summary(extracted_text) if len(extracted_text) > 3000 else generate_summary_with_gemini(extracted_text)
-    
-    if summary_instance := Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first():
-        summary_instance.summary_text = summary
-        summary_instance.save()
-    else:
-        Summary.objects.create(user=request.user, uploaded_file=uploaded_file, summary_text=summary)
+        try:
+            # Text extraction step
+            if is_youtube:
+                try:
+                    extracted_text = download_and_transcribe_youtube(uploaded_file.youtube_link)
+                except Exception as e:
+                    print(f"YouTube extraction error: {e}")
+                    return f"Error in YouTube extraction: {str(e)}"
+            else:
+                file_path = uploaded_file.file.path
+                try:
+                    if file_path.lower().endswith(".pdf"):
+                        extracted_text = extract_text_from_pdf(file_path)
+                    elif file_path.lower().endswith(".txt"):
+                        extracted_text = extract_text_from_txt(file_path)
+                    elif file_path.lower().endswith((".wav", ".mp3", ".ogg", ".m4a")):
+                        extracted_text = transcribe_audio_assemblyai(file_path)
+                except Exception as e:
+                    print(f"Text extraction error: {e}")
+                    return f"Error in text extraction: {str(e)}"
+                    
+            # Create extracted text record
+            try:
+                ExtractedText.objects.create(user=user, uploaded_file=uploaded_file, extracted_text=extracted_text)
+            except Exception as e:
+                print(f"ExtractedText creation error: {e}")
+                return f"Error creating extracted text record: {str(e)}"
+                
+        except Exception as e:
+            print(f"General extraction error: {e}")
+            return f"Error during processing: {str(e)}"
+
+    # Summary generation step
+    try:
+        if len(extracted_text) > 3000:
+            summary = generate_long_summary(extracted_text)
+        else:
+            summary = generate_summary_with_gemini(extracted_text)
+    except Exception as e:
+        print(f"Summary generation error: {e}")
+        return f"Error generating summary: {str(e)}"
+        
+    # Save summary
+    try:
+        if summary_instance:
+            summary_instance.summary_text = summary
+            summary_instance.save()
+        else:
+            Summary.objects.create(user=user, uploaded_file=uploaded_file, summary_text=summary)
+    except Exception as e:
+        print(f"Summary saving error: {e}")
+        return f"Error saving summary: {str(e)}"
     
     return summary
 
-def handle_chat_request(request, uploaded_file, summary):
+
+@login_required
+def handle_chat_request(request, uploaded_file):
     """Process chat messages with Gemini"""
     if request.POST.get('message') != None:
         user_message = request.POST.get('message').strip()
@@ -271,7 +333,8 @@ def handle_chat_request(request, uploaded_file, summary):
     except Exception as e:
         print(f"Chat error: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
-    
+
+@login_required
 def generate_mcqs_with_gemini(summary_text, num_questions, difficulty):
     """Generate multiple-choice questions dynamically based on the summary."""
     
@@ -295,6 +358,7 @@ def generate_mcqs_with_gemini(summary_text, num_questions, difficulty):
     response = model.generate_content(prompt, generation_config=generation_config)
     return response.text if response.text else "No MCQs generated."
 
+@login_required
 def parse_mcq_response(mcq_text):
     """Extract MCQs from AI-generated response."""
     mcqs = []
@@ -320,11 +384,13 @@ def parse_mcq_response(mcq_text):
             })
     return mcqs
 
+@login_required
 def quiz_options(request, file_id):
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
 
     return render(request, "result/quiz_options.html", {"file": uploaded_file})
 
+@login_required
 def take_quiz(request, file_id):
     """Generates and displays the quiz."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
@@ -342,6 +408,7 @@ def take_quiz(request, file_id):
 
     return render(request, "result/quiz.html", {"mcqs": mcqs, "file": uploaded_file})
 
+@login_required
 def submit_quiz(request, file_id):
     """Handles quiz submission and calculates the score."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
@@ -377,7 +444,7 @@ def submit_quiz(request, file_id):
 
     return render(request, "result/quiz_result.html", {"mcqs":mcqs, "results": results, "score": score, "file": uploaded_file})
 
-
+@login_required
 def chatbot(request, file_id):
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
     summary_instance = Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
@@ -418,6 +485,37 @@ def transcribe_audio_assemblyai(audio_file_path):
     except Exception as e:
         return f"Error during AssemblyAI transcription: {e}"
     
+    
+def download_and_transcribe_youtube(youtube_url):
+    """Download YouTube audio and transcribe using AssemblyAI"""
+    try:
+        # 1. Download audio
+        yt = YouTube(youtube_url)
+        audio_stream = yt.streams.filter(only_audio=True).first()
+        if not audio_stream:
+            return JsonResponse({'error': 'No audio stream found for this YouTube video.'}, status=400)
+
+        print("Downloading audio...")
+        temp_audio_file = f'/tmp/youtube_audio_{time.time()}.mp4'
+        audio_stream.download(output_path='/tmp', filename=os.path.basename(temp_audio_file))
+        print(f"Audio downloaded to: {temp_audio_file}")
+
+        transcriber = aai.Transcriber()
+        print("Transcribing audio with AssemblyAI...")
+        transcript = transcriber.transcribe(temp_audio_file)
+
+        os.remove(temp_audio_file)
+        print(f"Temporary audio file removed: {temp_audio_file}")
+        
+        return transcript.text
+        
+    except Exception as e:
+        # Cleanup if error occurred
+        if 'temp_audio_file' in locals() and os.path.exists(temp_audio_file):
+            os.remove(temp_audio_file)
+        raise Exception(f"YouTube processing failed: {str(e)}")
+
+@login_required
 def transcripts(request, file_id):
     """Display the transcript of the uploaded audio file."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)

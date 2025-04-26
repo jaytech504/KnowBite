@@ -12,7 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from decouple import config
-
+from dotenv import load_dotenv
+load_dotenv()
 
 import os
 
@@ -142,6 +143,9 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_REDIRECT_URL = 'dashboard'
 
 LOGIN_URL = 'login'
+
+ASSEMBLYAI_API_KEY = os.getenv('ASSEMBLYAI_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
