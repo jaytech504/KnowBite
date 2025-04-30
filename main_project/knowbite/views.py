@@ -34,14 +34,14 @@ def upload_file(request):
                 return redirect('dashboard')
             
             try:
-                UploadedFile.objects.create(
+                uploaded_file = UploadedFile.objects.create(
                     user=request.user,
                     file_type='youtube',
                     youtube_link=youtube_link,
                     file=None  # Explicitly set file to None
                 )
                 messages.success(request, "YouTube link saved successfully")
-                return redirect('summary')
+                return redirect('summary', file_id=uploaded_file.id)
             except Exception as e:
                 messages.error(request, f"Error saving YouTube link: {str(e)}")
                 return redirect('dashboard')

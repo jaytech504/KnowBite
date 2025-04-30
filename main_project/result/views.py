@@ -8,7 +8,10 @@ import fitz  # PyMuPDF
 from pdf2image import convert_from_path, convert_from_bytes
 import pytesseract
 import io
-import markdown  
+import markdown 
+import tempfile
+import shutil 
+import subprocess
 from PIL import Image
 from django.contrib import messages
 from django.http import JsonResponse, StreamingHttpResponse
@@ -107,6 +110,7 @@ def generate_summary_with_gemini(text):
     - When including mathematical formulas, please format them using LaTeX notation enclosed within dollar signs ($).
       For example, for an equation like 'y equals x squared', you should output '$y = x^2$'. 
       For subscripts, use 'a_i', for superscripts use 'b^2' and other complex ones like summation, intergrals etc.
+    - Use nicely formatted html tables and diagrams **only if necessary**.
     - Include examples and explanations where needed.
     - Use appropriate emojis before a section header.
     - A **concise conclusion** summarizing the main ideas.
@@ -473,47 +477,68 @@ def chatbot(request, file_id):
 
 def transcribe_audio_assemblyai(audio_file_path):
     """Transcribes audio from a file path using AssemblyAI."""
+    headers = {"authorization": settings.ASSEMBLYAI_API_KEY}
+
     try:
-        transcriber = aai.Transcriber()
-        transcript = transcriber.transcribe(audio_file_path)
-        if transcript.error:
-            return f"AssemblyAI Error: {transcript.error}"
-        else:
-            return transcript.text
-    except aai.exceptions.ApiException as e:
-        return f"AssemblyAI API Exception: {e}"
-    except Exception as e:
-        return f"Error during AssemblyAI transcription: {e}"
-    
-    
+        # Upload audio file
+        with open(audio_file_path, "rb") as f:
+            upload_response = requests.post(
+                "https://api.assemblyai.com/v2/upload",
+                headers=headers,
+                data=f,
+                timeout=300
+            )
+        upload_response.raise_for_status()
+        audio_url = upload_response.json()["upload_url"]
+
+        # Start transcription job
+        transcript_response = requests.post(
+            "https://api.assemblyai.com/v2/transcript",
+            headers=headers,
+            json={"audio_url": audio_url}
+        )
+        transcript_response.raise_for_status()
+        transcript_id = transcript_response.json()["id"]
+
+        # Poll for result
+        polling_url = f"https://api.assemblyai.com/v2/transcript/{transcript_id}"
+        while True:
+            polling_response = requests.get(polling_url, headers=headers)
+            result = polling_response.json()
+
+            if result["status"] == "completed":
+                return result["text"]
+            elif result["status"] == "error":
+                return f"Transcription failed: {result['error']}"
+
+            time.sleep(5)
+
+    except requests.exceptions.RequestException as e:
+        return f"Transcription error: {e}"
 def download_and_transcribe_youtube(youtube_url):
-    """Download YouTube audio and transcribe using AssemblyAI"""
+    """Transcribe a YouTube video directly using AssemblyAI"""
     try:
-        # 1. Download audio
-        yt = YouTube(youtube_url)
-        audio_stream = yt.streams.filter(only_audio=True).first()
-        if not audio_stream:
-            return JsonResponse({'error': 'No audio stream found for this YouTube video.'}, status=400)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            audio_path = os.path.join(temp_dir, 'audio.mp3')
 
-        print("Downloading audio...")
-        temp_audio_file = f'/tmp/youtube_audio_{time.time()}.mp4'
-        audio_stream.download(output_path='/tmp', filename=os.path.basename(temp_audio_file))
-        print(f"Audio downloaded to: {temp_audio_file}")
+            # Download and convert to MP3 using yt-dlp and ffmpeg
+            subprocess.run([
+                'yt-dlp',
+                '-x',
+                '--audio-format', 'mp3',
+                '--ffmpeg-location', 'C:/ffmpeg/ffmpeg-7.1.1-essentials_build/ffmpeg-7.1.1-essentials_build/bin',  # Adjust this if you installed elsewhere
+                '-o', audio_path,
+                youtube_url
+            ], check=True)
 
-        transcriber = aai.Transcriber()
-        print("Transcribing audio with AssemblyAI...")
-        transcript = transcriber.transcribe(temp_audio_file)
+            # Transcribe the audio using your existing AssemblyAI function
+            print("Downloading done, starting transcription...")
+            return transcribe_audio_assemblyai(audio_path)
 
-        os.remove(temp_audio_file)
-        print(f"Temporary audio file removed: {temp_audio_file}")
-        
-        return transcript.text
-        
+    except subprocess.CalledProcessError as e:
+        return f"Download error: {str(e)}"
     except Exception as e:
-        # Cleanup if error occurred
-        if 'temp_audio_file' in locals() and os.path.exists(temp_audio_file):
-            os.remove(temp_audio_file)
-        raise Exception(f"YouTube processing failed: {str(e)}")
+        return f"Transcription error: {str(e)}"
 
 @login_required
 def transcripts(request, file_id):
