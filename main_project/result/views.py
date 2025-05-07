@@ -111,6 +111,7 @@ def generate_summary_with_gemini(text):
       For example, for an equation like 'y equals x squared', you should output '$y = x^2$'. 
       For subscripts, use 'a_i', for superscripts use 'b^2' and other complex ones like summation, intergrals etc.
     - Use nicely formatted html tables and diagrams **only if necessary**.
+    - Add important and related images using html img tag **only if necessary**.
     - Include examples and explanations where needed.
     - Use appropriate emojis before a section header.
     - A **concise conclusion** summarizing the main ideas.
@@ -338,13 +339,15 @@ def handle_chat_request(request, uploaded_file):
         print(f"Chat error: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
 
-@login_required
+
 def generate_mcqs_with_gemini(summary_text, num_questions, difficulty):
     """Generate multiple-choice questions dynamically based on the summary."""
     
     prompt = f"""
     Generate {num_questions} multiple-choice questions based on the following summary. 
     The questions should be {difficulty} level.
+    Use Latex formulas **where necessary**.
+    Use diagrams **if necessary**.
 
     - Each question must have four answer choices (A, B, C, D).
     - Clearly mark the correct answer.
@@ -362,7 +365,7 @@ def generate_mcqs_with_gemini(summary_text, num_questions, difficulty):
     response = model.generate_content(prompt, generation_config=generation_config)
     return response.text if response.text else "No MCQs generated."
 
-@login_required
+
 def parse_mcq_response(mcq_text):
     """Extract MCQs from AI-generated response."""
     mcqs = []
@@ -401,7 +404,9 @@ def take_quiz(request, file_id):
     summary_instance = get_object_or_404(Summary, uploaded_file=uploaded_file)
 
     num_questions = int(request.GET.get("num_questions", 10))
+    print(num_questions)
     difficulty = request.GET.get("difficulty", "medium").lower()
+    print(difficulty)
 
     # Generate MCQs on the fly
     mcq_text = generate_mcqs_with_gemini(summary_instance.summary_text, num_questions, difficulty)
@@ -531,7 +536,7 @@ def download_and_transcribe_youtube(youtube_url):
                 youtube_url
             ], check=True)
 
-            # Transcribe the audio using your existing AssemblyAI function
+            # Transcribe the audio using existing AssemblyAI function
             print("Downloading done, starting transcription...")
             return transcribe_audio_assemblyai(audio_path)
 

@@ -303,3 +303,150 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Resizable split panel functionality
+    const resizeHandle = document.querySelector('.resize-handle');
+    const summarySection = document.getElementById('summary-section');
+    const chatbotSection = document.getElementById('chatbot-section');
+    
+    let isResizing = false;
+    let lastX = 0;
+    
+    resizeHandle.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      lastX = e.clientX;
+      document.body.style.cursor = 'col-resize';
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', stopResize);
+      e.preventDefault(); // Prevent text selection during drag
+    });
+    
+    function handleMouseMove(e) {
+      if (!isResizing) return;
+      
+      const dx = e.clientX - lastX;
+      const summaryWidth = summarySection.getBoundingClientRect().width;
+      const newSummaryWidth = summaryWidth + dx;
+      
+      // Set minimum and maximum widths
+      if (newSummaryWidth > 200 && newSummaryWidth < window.innerWidth - 300) {
+        summarySection.style.flex = '0 0 ' + newSummaryWidth + 'px';
+        lastX = e.clientX;
+      }
+    }
+    
+    function stopResize() {
+      isResizing = false;
+      document.body.style.cursor = '';
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', stopResize);
+    }
+    
+  });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const darkMode = document.cookie.split('; ').find(row => row.startsWith('dark_mode='));
+    if (darkMode && darkMode.split('=')[1] === 'true') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-mode-toggle').checked = true;
+    }
+})
+
+document.getElementById('dark-mode-toggle').addEventListener('change', function() {
+    fetch("{% url 'toggle_dark_mode' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+    }).then(response => response.json())
+      .then(data => {
+        if (data.success) {
+            document.body.classList.toggle('dark-mode');
+            location.reload();
+        }
+      });
+});
+
+function updateDifficultyLabel(value) {
+    const labels = document.querySelectorAll('.slider-label');
+    const hiddenInput = document.getElementById('difficulty_text');
+    
+    // Remove active class from all labels
+    labels.forEach(label => label.classList.remove('active'));
+    
+    // Add active class to current label and update hidden input
+    if(value == 1) {
+        document.querySelector('.slider-label[data-value="1"]').classList.add('active');
+        hiddenInput.value = 'easy';
+    } else if(value == 2) {
+        document.querySelector('.slider-label[data-value="2"]').classList.add('active');
+        hiddenInput.value = 'medium';
+    } else if(value == 3) {
+        document.querySelector('.slider-label[data-value="3"]').classList.add('active');
+        hiddenInput.value = 'hard';
+    }
+}
+
+// Initialize slider labels on load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set medium as default active
+    updateDifficultyLabel(2);
+    
+    // Add click handlers for difficulty labels
+    document.querySelectorAll('.slider-label').forEach(label => {
+        label.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            document.getElementById('difficulty').value = value;
+            updateDifficultyLabel(value);
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Update progress as questions are answered
+    const questionCards = document.querySelectorAll('.question-card');
+    const progressBar = document.querySelector('.progress-bar');
+    const progressText = document.querySelector('.progress-text');
+    
+    // Initialize progress
+    updateProgress();
+    
+    // Add event listeners to all radio buttons
+    document.querySelectorAll('.option input').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const questionCard = this.closest('.question-card');
+            questionCard.querySelector('.question-status').classList.add('answered');
+            updateProgress();
+        });
+    });
+    
+    function updateProgress() {
+        const answered = document.querySelectorAll('.question-status.answered').length;
+        const total = questionCards.length;
+        const percentage = (answered / total) * 100;
+        
+        progressBar.style.width = percentage + '%';
+        progressText.textContent = answered + '/' + total + ' answered';
+        
+        // Enable submit button if all answered (optional)
+        if (answered === total) {
+            document.querySelector('.submit-btn').style.opacity = '1';
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate score circle
+    const scoreCircles = document.querySelectorAll('.score-circle');
+    scoreCircles.forEach(circle => {
+        const score = parseInt(circle.getAttribute('data-score'));
+        const fill = circle.querySelector('.score-fill');
+        const circumference = 2 * Math.PI * 45;
+        const offset = circumference - (score / 100) * circumference;
+        
+        fill.style.strokeDashoffset = offset;
+    });
+});
