@@ -16,8 +16,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context 
+import certifi
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -150,20 +150,21 @@ LOGIN_URL = 'login'
 ASSEMBLYAI_API_KEY = os.getenv('ASSEMBLYAI_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
-# settings.py
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'jasonachin33@example.com>'
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 
 # Optional but recommended for development
-SENDGRID_SANDBOX_MODE_IN_DEBUG = True
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'apikey'  # This stays as 'apikey'
-EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+#SENDGRID_SANDBOX_MODE_IN_DEBUG = True
+#EMAIL_HOST = 'smtp.sendgrid.net'
+#EMAIL_HOST_USER = 'apikey'  # This stays as 'apikey'
+#EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+#EMAIL_PORT = 465
+#EMAIL_USE_SSL = True  # Use SSL since STARTTLS (587) failed
+#EMAIL_USE_TLS = False  
 
-DEFAULT_FROM_EMAIL = 'jasonachin33@gmail.com'
+#DEFAULT_FROM_EMAIL = 'jasonachin33@gmail.com'
 
 
 # Default primary key field type

@@ -4,4 +4,4 @@ from users.utils import send_login_notification
 
 @receiver(user_logged_in)
 def send_login_email(sender, request, user, **kwargs):
-    send_login_notification(user, request)  # Reusable function
+    send_login_notification(user)  # Reusable function

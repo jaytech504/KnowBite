@@ -405,7 +405,13 @@ def take_quiz(request, file_id):
 
     num_questions = int(request.GET.get("num_questions", 10))
     print(num_questions)
-    difficulty = request.GET.get("difficulty", "medium").lower()
+    if request.GET.get("difficulty") == '1':
+        difficulty = "easy"
+    elif request.GET.get("difficulty") == '3':
+        difficulty = "hard"
+    else:
+        difficulty = "medium"
+
     print(difficulty)
 
     # Generate MCQs on the fly

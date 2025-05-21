@@ -373,18 +373,15 @@ document.getElementById('dark-mode-toggle').addEventListener('change', function(
 
 function updateDifficultyLabel(value) {
     const labels = document.querySelectorAll('.slider-label');
-    const difficultyText = document.getElementById('difficulty').value
+    let difficultyText = document.getElementById('difficulty').value;
     labels.forEach(label => label.classList.remove('active'));
     
     if(value == 1) {
         document.querySelector('.slider-label[data-value="1"]').classList.add('active');
-        difficultyText = 'easy'
     } else if(value == 2) {
         document.querySelector('.slider-label[data-value="2"]').classList.add('active');
-        difficultyText = 'medium'
-    } else if(value == 3) {
+    } else if(value == 3) { 
         document.querySelector('.slider-label[data-value="3"]').classList.add('active');
-        difficultyText = 'hard'
     }
 }
 
