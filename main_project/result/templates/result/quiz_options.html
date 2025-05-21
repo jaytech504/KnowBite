@@ -3,7 +3,7 @@
 <div class="quiz-generator-container">
     <div class="quiz-generator-card">
         <h2 class="quiz-title">Generate Quiz</h2>
-        <form method="post" action="{% url 'take_quiz' file.id %}" class="quiz-form">
+        <form method="get" action="{% url 'take_quiz' file.id %}" class="quiz-form">
             {% csrf_token %}
             
             <!-- Number of Questions - Modern Select -->
@@ -26,15 +26,19 @@
             <div class="form-group">
                 <label class="form-label">Difficulty Level</label>
                 <div class="difficulty-slider">
-                    <input type="range" name="difficulty" id="difficulty" 
-                           min="1" max="3" value="2" class="slider"
+                    <input type="range" name="difficulty_slider" id="difficulty_slider" 
+                           min="1" max="3" 
+                           value="{% if request.GET.diffiulty_slider == 1 %}easy{% elif request.GET.diffiulty_slider == 3 %}hard{% else %}'medium'{% endif %}" 
+                           class="slider"
                            oninput="updateDifficultyLabel(this.value)">
                     <div class="slider-labels">
-                        <span class="slider-label" value="easy">Easy</span>
-                        <span class="slider-label" value="medium">Medium</span>
-                        <span class="slider-label" value="hard">Hard</span>
+                        <span class="slider-label" data-value="1">Easy</span>
+                        <span class="slider-label" data-value="2">Medium</span>
+                        <span class="slider-label" data-value="3">Hard</span>
                     </div>
-                    <input type="hidden" name="difficulty_text" id="difficulty_text" value="medium">
+                    <!-- Hidden input that will actually be submitted -->
+                    <input type="hidden" name="difficulty" id="difficulty" 
+                        value = "">
                 </div>
             </div>
             

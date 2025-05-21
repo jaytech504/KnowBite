@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; }
+    .container { background: white; padding: 20px; border-radius: 8px; max-width: 600px; margin: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Hello {{ user.username }}</h2>
+    <p>You logged into your account.</p>
+    <p><strong>Time:</strong> {{ login_time }}</p>
+    <p><strong>IP:</strong> {{ ip_address }}</p>
+    <p>If this wasn’t you, please reset your password.</p>
+    <p style="color: #888;">&copy; {{ current_year }} MyApp</p>
+  </div>
+</body>
+</html>

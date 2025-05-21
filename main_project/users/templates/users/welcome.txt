@@ -1,0 +1,6 @@
+Hello {{ user.username }},
+
+Welcome to {{ site_name }}! We're excited to have you on board.
+
+Thanks,
+The {{ site_name }} Team

@@ -43,20 +43,17 @@ function showYoutubeInput() {
     document.getElementById('youtube-input').style.display = 'block';
 }
 
-// Hide YouTube input field
 function hideYoutubeInput() {
     document.getElementById('youtube-input').style.display = 'none';
     document.getElementById('youtube-link').value = '';
 }
 
-// Trigger file input based on type
 function triggerFileUpload(fileType) {
     document.getElementById('file_type').value = fileType;
     document.getElementById('file-input').accept = getAcceptAttribute(fileType);
     document.getElementById('file-input').click();
 }
 
-// Get accept attribute based on file type
 function getAcceptAttribute(fileType) {
     const acceptMap = {
         'pdf': '.pdf,.txt',
@@ -65,15 +62,64 @@ function getAcceptAttribute(fileType) {
     return acceptMap[fileType] || '';
 }
 
-// Submit form when file is selected
+// Updated submit function with loading bar
 function submitForm() {
     const fileInput = document.getElementById('file-input');
     if (fileInput.files.length > 0) {
+        showLoading();
+        simulateProgress(); // For demo - replace with actual progress in real implementation
         document.getElementById('upload-form').submit();
     }
 }
 
-// Validate YouTube URL before submission
+// Show loading overlay
+function showLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    overlay.style.display = 'flex';
+}
+
+// Hide loading overlay
+function hideLoading() {
+    const overlay = document.getElementById('loading-overlay');
+    overlay.style.display = 'none';
+    resetProgress();
+}
+
+// Reset progress bar
+function resetProgress() {
+    document.getElementById('upload-progress').style.width = '0%';
+    document.getElementById('progress-text').textContent = 'Processing your file...';
+}
+
+// Simulate progress (replace with real progress tracking in your implementation)
+function simulateProgress() {
+    const progressBar = document.getElementById('upload-progress');
+    const progressText = document.getElementById('progress-text');
+    let progress = 0;
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress > 90) progress = 90; // Don't go to 100% until actually done
+        
+        progressBar.style.width = progress + '%';
+        
+        if (progress < 30) {
+            progressText.textContent = 'Uploading file...';
+        } else if (progress < 60) {
+            progressText.textContent = 'Processing content...';
+        } else {
+            progressText.textContent = 'Generating summary...';
+        }
+        
+        if (progress >= 100) {
+            clearInterval(interval);
+        }
+    }, 500);
+    
+    return interval;
+}
+
+// Updated YouTube form submission with loading
 document.getElementById('youtube-form').addEventListener('submit', function(e) {
     const urlInput = document.getElementById('youtube-link');
     const youtubeRegex = /^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
@@ -82,50 +128,16 @@ document.getElementById('youtube-form').addEventListener('submit', function(e) {
         e.preventDefault();
         alert('Please enter a valid YouTube URL');
         urlInput.focus();
+        return;
     }
-});function showYoutubeInput() {
-        document.getElementById('youtube-input').style.display = 'block';
-    }
+    
+    // Show loading for valid YouTube URL
+    showLoading();
+    const progressInterval = simulateProgress();
+    // The progress will be interrupted when page changes
+});
 
-    // Hide YouTube input field
-    function hideYoutubeInput() {
-        document.getElementById('youtube-input').style.display = 'none';
-        document.getElementById('youtube-link').value = '';
-    }
-
-    // Trigger file input based on type
-    function triggerFileUpload(fileType) {
-        document.getElementById('file_type').value = fileType;
-        document.getElementById('file-input').accept = getAcceptAttribute(fileType);
-        document.getElementById('file-input').click();
-    }
-
-    // Get accept attribute based on file type
-    function getAcceptAttribute(fileType) {
-        const acceptMap = {
-            'pdf': '.pdf,.txt',
-            'audio': '.mp3,.wav,.ogg,.m4a'
-        };
-        return acceptMap[fileType] || '';
-    }
-
-    // Submit form when file is selected
-    function submitForm() {
-        const fileInput = document.getElementById('file-input');
-        if (fileInput.files.length > 0) {
-            document.getElementById('upload-form').submit();
-        }
-    }
-
-    // Validate YouTube URL before submission
-    document.getElementById('youtube-form').addEventListener('submit', function(e) {
-        const urlInput = document.getElementById('youtube-link');
-        const youtubeRegex = /^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
-        
-        if (!youtubeRegex.test(urlInput.value)) {
-            e.preventDefault();
-            alert('Please enter a valid YouTube URL');
-            urlInput.focus();
-        }
-    });
-
+// Optional: Hide loading when navigating away
+window.addEventListener('beforeunload', function() {
+    hideLoading();
+});

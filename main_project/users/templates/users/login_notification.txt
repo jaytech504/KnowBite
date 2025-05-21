@@ -1,0 +1,8 @@
+Hi {{ user.username }},
+
+There was a new login to your {{ site_name }} account from IP address {{ ip_address }}.
+
+If this wasn't you, please secure your account immediately.
+
+Thanks,
+The {{ site_name }} Team

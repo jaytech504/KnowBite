@@ -450,8 +450,14 @@ def submit_quiz(request, file_id):
         })
 
     score = (correct_count / len(mcqs)) * 100 if mcqs else 0
+    incorrect_count = len(mcqs) - correct_count
 
-    return render(request, "result/quiz_result.html", {"mcqs":mcqs, "results": results, "score": score, "file": uploaded_file})
+    return render(request, "result/quiz_result.html", {"mcqs":mcqs, 
+                                                        "results": results, 
+                                                        "score": score, 
+                                                        "file": uploaded_file,
+                                                        "correct_count": correct_count,
+                                                        "incorrect_count": incorrect_count,})
 
 @login_required
 def chatbot(request, file_id):

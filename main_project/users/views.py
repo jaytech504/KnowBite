@@ -1,17 +1,23 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.contrib.auth import login
+from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from .forms import UserRegisterForm, CustomLoginForm
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
+from users.utils import send_welcome_email
 # Create your views here.
 
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            send_welcome_email(user)
             messages.success(request, "Your account has been created successfully!")
             return redirect('login')
         else:

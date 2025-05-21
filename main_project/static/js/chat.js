@@ -370,40 +370,23 @@ document.getElementById('dark-mode-toggle').addEventListener('change', function(
       });
 });
 
+
 function updateDifficultyLabel(value) {
     const labels = document.querySelectorAll('.slider-label');
-    const hiddenInput = document.getElementById('difficulty_text');
-    
-    // Remove active class from all labels
+    const difficultyText = document.getElementById('difficulty').value
     labels.forEach(label => label.classList.remove('active'));
     
-    // Add active class to current label and update hidden input
     if(value == 1) {
         document.querySelector('.slider-label[data-value="1"]').classList.add('active');
-        hiddenInput.value = 'easy';
+        difficultyText = 'easy'
     } else if(value == 2) {
         document.querySelector('.slider-label[data-value="2"]').classList.add('active');
-        hiddenInput.value = 'medium';
+        difficultyText = 'medium'
     } else if(value == 3) {
         document.querySelector('.slider-label[data-value="3"]').classList.add('active');
-        hiddenInput.value = 'hard';
+        difficultyText = 'hard'
     }
 }
-
-// Initialize slider labels on load
-document.addEventListener('DOMContentLoaded', function() {
-    // Set medium as default active
-    updateDifficultyLabel(2);
-    
-    // Add click handlers for difficulty labels
-    document.querySelectorAll('.slider-label').forEach(label => {
-        label.addEventListener('click', function() {
-            const value = this.getAttribute('data-value');
-            document.getElementById('difficulty').value = value;
-            updateDifficultyLabel(value);
-        });
-    });
-});
 
 document.addEventListener('DOMContentLoaded', function() {
     // Update progress as questions are answered
