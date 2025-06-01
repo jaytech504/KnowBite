@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from . import views_subscription
 urlpatterns = [
     path('', views.landing_page, name='landing_page'),
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -8,6 +8,8 @@ urlpatterns = [
     path('yournotes/', views.yournotes, name='yournotes'),
     path('yournotes/<int:file_id>/delete', views.yournotes, name='delete_file'),
     path('settings/', views.settings, name='settings'),
-    path('toggle-dark-mode/', views.toggle_dark_mode, name='toggle_dark_mode')
-
+    path('toggle-dark-mode/', views.toggle_dark_mode, name='toggle_dark_mode'),
+    path('pricing/', views_subscription.pricing, name='pricing'),
+    path('subscription-status/', views_subscription.subscription_status, name='subscription_status'),
+    path('paddle/webhook/', views_subscription.paddle_webhook, name='paddle_webhook'),
 ]

@@ -1,0 +1,51 @@
+{% extends "knowbite/base.html" %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow border-0 p-4 subscription-status-card">
+        <h2 class="text-center mb-4">Your Subscription</h2>
+        {% if subscription and subscription.plan %}
+          <div class="text-center mb-3">
+            <span class="badge bg-success fs-5">{{ subscription.plan.get_name_display }} ({{ subscription.plan.get_billing_period_display }})</span>
+          </div>
+          <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item">Status: <b>{% if subscription.is_active %}<span class="text-success">Active</span>{% else %}<span class="text-danger">Inactive</span>{% endif %}</b></li>
+            <li class="list-group-item">Next Billing Date: <b>{% if subscription.current_period_end %}{{ subscription.current_period_end|date:'F j, Y' }}{% else %}N/A{% endif %}</b></li>
+            <li class="list-group-item">PDF Uploads Allowed: <b>{% if subscription.plan.pdf_uploads_per_month >= 9999 %}Unlimited{% else %}{{ subscription.plan.pdf_uploads_per_month }}{% endif %}</b></li>
+            <li class="list-group-item">Audio Uploads Allowed: <b>{% if subscription.plan.audio_uploads_per_month >= 9999 %}Unlimited{% else %}{{ subscription.plan.audio_uploads_per_month }}{% endif %}</b></li>
+            <li class="list-group-item">YouTube Links Allowed: <b>{% if subscription.plan.youtube_links_per_month >= 9999 %}Unlimited{% else %}{{ subscription.plan.youtube_links_per_month }}{% endif %}</b></li>
+            <li class="list-group-item">Quizzes Allowed: <b>{% if subscription.plan.quizzes_per_month >= 9999 %}Unlimited{% else %}{{ subscription.plan.quizzes_per_month }}{% endif %}</b></li>
+          </ul>
+          <div class="text-center mt-4">
+            <a href="/pricing/" class="btn btn-outline-primary">Change Plan</a>
+          </div>
+        {% else %}
+          <div class="alert alert-warning text-center">
+            You do not have an active subscription.<br>
+            <a href="/pricing/" class="btn btn-gradient-primary mt-3">Choose a Plan</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .subscription-status-card {
+    border-radius: 1.5rem;
+    background: #fff;
+  }
+  .btn-gradient-primary {
+    background: linear-gradient(90deg, #4f8cff 0%, #6f6fff 100%);
+    color: #fff;
+    border: none;
+    border-radius: 2rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(79,140,255,0.15);
+  }
+  .btn-gradient-primary:hover {
+    background: linear-gradient(90deg, #6f6fff 0%, #4f8cff 100%);
+    color: #fff;
+  }
+</style>
+{% endblock %}

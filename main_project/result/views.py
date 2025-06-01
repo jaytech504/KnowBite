@@ -40,6 +40,7 @@ generation_config = {
     "max_output_tokens": 1500,
 }
 
+
 SYSTEM_BASE = """You are a helpful teacher assisting students. Follow these rules:
 1. Answer based on the document summary and chat history
 2. Format math with LaTeX: $inline$ and $$display$$
@@ -110,8 +111,9 @@ def generate_summary_with_gemini(text):
     - When including mathematical formulas, please format them using LaTeX notation enclosed within dollar signs ($).
       For example, for an equation like 'y equals x squared', you should output '$y = x^2$'. 
       For subscripts, use 'a_i', for superscripts use 'b^2' and other complex ones like summation, intergrals etc.
-    - Use nicely formatted html tables and diagrams **only if necessary**.
-    - Add important and related images using html img tag **only if necessary**.
+    - Use nicely formatted html tables **only if necessary** for comparisons, features etc.
+    - Add important and related images using html img tag **if necessary**.
+    - Use diagrams such as graphs, circuit design etc **when necessary**.
     - Include examples and explanations where needed.
     - Use appropriate emojis before a section header.
     - A **concise conclusion** summarizing the main ideas.
@@ -347,7 +349,8 @@ def generate_mcqs_with_gemini(summary_text, num_questions, difficulty):
     Generate {num_questions} multiple-choice questions based on the following summary. 
     The questions should be {difficulty} level.
     Use Latex formulas **where necessary**.
-    Use diagrams **if necessary**.
+    Use diagrams such as graphs, circuit diagrams etc **if necessary**.
+    You can ask questions using related images using the html image tag.
 
     - Each question must have four answer choices (A, B, C, D).
     - Clearly mark the correct answer.

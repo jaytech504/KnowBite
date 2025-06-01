@@ -150,6 +150,20 @@ LOGIN_URL = 'login'
 ASSEMBLYAI_API_KEY = os.getenv('ASSEMBLYAI_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
+# Paddle configuration
+PADDLE_VENDOR_ID = os.getenv('PADDLE_ID')
+PADDLE_API_KEY = os.getenv('PADDLE_API_KEY')
+PADDLE_PUBLIC_KEY = 'live_38488cba021970c7190c1ad084a'
+
+# These should match the paddle_plan_id values you set in the admin for each plan
+PADDLE_BASIC_MONTHLY_PLAN_ID = os.getenv('PADDLE_BASIC_MONTHLY_PLAN_ID')
+PADDLE_BASIC_YEARLY_PLAN_ID = os.getenv('PADDLE_BASIC_YEARLY_PLAN_ID')
+PADDLE_PRO_MONTHLY_PLAN_ID = os.getenv('PADDLE_PRO_MONTHLY_PLAN_ID')
+PADDLE_PRO_YEARLY_PLAN_ID = os.getenv('PADDLE_PRO_YEARLY_PLAN_ID')
+
+# Set to True for sandbox/testing, False for production
+PADDLE_SANDBOX = True
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'jasonachin33@example.com>'
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
