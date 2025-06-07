@@ -118,7 +118,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+CSP_FRAME_ANCESTORS = [
+    "'self'",
+    "https://*.paddle.com",
+    "https://*.paddlecheckout.com",
+    "https://*.paddlepayments.com",
+    "https://*.paddleapi.com",
+    "https://*.billing.paddle.com",
+    "https://buy.paddle.com",
+]
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -153,7 +161,7 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 # Paddle configuration
 PADDLE_VENDOR_ID = os.getenv('PADDLE_ID')
 PADDLE_API_KEY = os.getenv('PADDLE_API_KEY')
-PADDLE_PUBLIC_KEY = 'live_38488cba021970c7190c1ad084a'
+PADDLE_CLIENT_TOKEN = os.getenv('PADDLE_CLIENT_TOKEN')  # Add this line
 
 # These should match the paddle_plan_id values you set in the admin for each plan
 PADDLE_BASIC_MONTHLY_PLAN_ID = os.getenv('PADDLE_BASIC_MONTHLY_PLAN_ID')

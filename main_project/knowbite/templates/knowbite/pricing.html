@@ -30,15 +30,48 @@
     {% endfor %}
   </div>
 </div>
-
-<script src="https://cdn.paddle.com/paddle/paddle.js"></script>
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <script>
-  Paddle.Setup({ vendor: {{ paddle_vendor_id }}, sandbox: {{ paddle_sandbox|yesno:"true,false" }} });
-  document.querySelectorAll('.subscribe-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      Paddle.Checkout.open({ product: btn.getAttribute('data-plan-id') });
-    });
-  });
+document.addEventListener('DOMContentLoaded', function() {
+  function setupPaddleButtons() {
+    if (window.Paddle) {
+      Paddle.Environment.set('{{ paddle_sandbox|yesno:"sandbox,production" }}');      Paddle.Initialize({
+        token: '{{ paddle_client_token }}',
+      });
+
+      document.querySelectorAll('.subscribe-btn').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+          const planId = btn.getAttribute('data-plan-id');
+          try {            const checkout = await Paddle.Checkout.open({
+              items: [{
+                priceId: planId,
+                quantity: 1
+              }],
+              settings: {
+                displayMode: 'overlay',
+                theme: 'light',
+                successUrl: window.location.origin + '/subscription/status/',
+                locale: 'en'
+              },
+              customData: {
+                user_email: '{{ request.user.email }}'
+              }
+            });
+              // Paddle v2 checkout doesn't return a status
+            // The checkout will automatically redirect on completion
+            console.log('Checkout opened:', checkout);
+          } catch (error) {
+            console.error('Checkout error:', error);
+            alert('An error occurred during checkout. Please try again.');
+          }
+        });
+      });
+    } else {
+      setTimeout(setupPaddleButtons, 100);
+    }
+  }
+  setupPaddleButtons();
+});
 </script>
 <style>
   .pricing-card {

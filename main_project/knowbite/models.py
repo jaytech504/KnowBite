@@ -80,7 +80,7 @@ class Plan(models.Model):
     billing_period = models.CharField(max_length=10, choices=BILLING_CHOICES, default='monthly')
     price = models.DecimalField(max_digits=6, decimal_places=2)
     description = models.TextField()
-    paddle_plan_id = models.CharField(max_length=100, unique=True)  # Paddle plan/product ID
+    paddle_plan_id = models.CharField(max_length=100, unique=True)  # This will store the Paddle Billing price ID
 
     # Limits
     pdf_uploads_per_month = models.IntegerField()
@@ -95,18 +95,50 @@ class Plan(models.Model):
     summary_regenerations_per_file = models.IntegerField()
     chatbot_messages_per_file = models.IntegerField()
 
-    class Meta:
-        unique_together = (('name', 'billing_period'),)
-
     def __str__(self):
-        return self.get_name_display()
+        return f"{self.get_name_display()} ({self.get_billing_period_display()})"
 
 class UserSubscription(models.Model):
+    STATUS_CHOICES = [
+        ('trialing', 'In Trial'),
+        ('active', 'Active'),
+        ('past_due', 'Past Due'),
+        ('paused', 'Paused'),
+        ('canceled', 'Canceled')
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     plan = models.ForeignKey(Plan, on_delete=models.SET_NULL, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='trialing')
     is_active = models.BooleanField(default=False)
+    current_period_start = models.DateTimeField(null=True, blank=True)
     current_period_end = models.DateTimeField(null=True, blank=True)
+    trial_end = models.DateTimeField(null=True, blank=True)
     paddle_subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    canceled_at = models.DateTimeField(null=True, blank=True)
+    pause_collection = models.BooleanField(default=False)
+    last_webhook_received = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.plan.name if self.plan else 'No Plan'}"
+        return f"{self.user.username} - {self.plan.name if self.plan else 'No Plan'} ({self.status})"
+
+    def is_in_trial(self):
+        from django.utils import timezone
+        return (
+            self.status == 'trialing' and 
+            self.trial_end is not None and 
+            self.trial_end > timezone.now()
+        )
+
+    def get_subscription_status(self):
+        """Returns the actual subscription status considering trial and cancellation"""
+        from django.utils import timezone
+        now = timezone.now()
+        
+        if self.status == 'canceled' or not self.is_active:
+            return 'canceled'
+        if self.is_in_trial():
+            return 'trialing'
+        if self.current_period_end and self.current_period_end < now:
+            return 'past_due'
+        return self.status

@@ -1,51 +1,101 @@
 {% extends "knowbite/base.html" %}
+{% load static %}
+
 {% block content %}
 <div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-      <div class="card shadow border-0 p-4 subscription-status-card">
-        <h2 class="text-center mb-4">Your Subscription</h2>
-        {% if subscription and subscription.plan %}
-          <div class="text-center mb-3">
-            <span class="badge bg-success fs-5">{{ subscription.plan.get_name_display }} ({{ subscription.plan.get_billing_period_display }})</span>
-          </div>
-          <ul class="list-group list-group-flush mb-3">
-            <li class="list-group-item">Status: <b>{% if subscription.is_active %}<span class="text-success">Active</span>{% else %}<span class="text-danger">Inactive</span>{% endif %}</b></li>
-            <li class="list-group-item">Next Billing Date: <b>{% if subscription.current_period_end %}{{ subscription.current_period_end|date:'F j, Y' }}{% else %}N/A{% endif %}</b></li>
-            <li class="list-group-item">PDF Uploads Allowed: <b>{% if subscription.plan.pdf_uploads_per_month >= 9999 %}Unlimited{% else %}{{ subscription.plan.pdf_uploads_per_month }}{% endif %}</b></li>
-            <li class="list-group-item">Audio Uploads Allowed: <b>{% if subscription.plan.audio_uploads_per_month >= 9999 %}Unlimited{% else %}{{ subscription.plan.audio_uploads_per_month }}{% endif %}</b></li>
-            <li class="list-group-item">YouTube Links Allowed: <b>{% if subscription.plan.youtube_links_per_month >= 9999 %}Unlimited{% else %}{{ subscription.plan.youtube_links_per_month }}{% endif %}</b></li>
-            <li class="list-group-item">Quizzes Allowed: <b>{% if subscription.plan.quizzes_per_month >= 9999 %}Unlimited{% else %}{{ subscription.plan.quizzes_per_month }}{% endif %}</b></li>
-          </ul>
-          <div class="text-center mt-4">
-            <a href="/pricing/" class="btn btn-outline-primary">Change Plan</a>
-          </div>
-        {% else %}
-          <div class="alert alert-warning text-center">
-            You do not have an active subscription.<br>
-            <a href="/pricing/" class="btn btn-gradient-primary mt-3">Choose a Plan</a>
-          </div>
-        {% endif %}
-      </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Subscription Status</h2>
+                    
+                    {% if user_subscription %}
+                        <div class="subscription-details">
+                            <div class="alert 
+                                {% if user_subscription.status == 'active' %}alert-success
+                                {% elif user_subscription.status == 'trialing' %}alert-info
+                                {% elif user_subscription.status == 'past_due' %}alert-warning
+                                {% else %}alert-danger{% endif %}">
+                                <h4 class="alert-heading">
+                                    {{ user_subscription.get_status_display }}
+                                </h4>
+                                
+                                {% if user_subscription.is_in_trial %}
+                                    <p>Trial ends on {{ user_subscription.trial_end|date:"F d, Y" }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <dl class="row">
+                                <dt class="col-sm-4">Plan</dt>
+                                <dd class="col-sm-8">{{ user_subscription.plan.name }}</dd>
+                                
+                                <dt class="col-sm-4">Billing Period</dt>
+                                <dd class="col-sm-8">{{ user_subscription.plan.get_billing_period_display }}</dd>
+                                
+                                <dt class="col-sm-4">Current Period</dt>
+                                <dd class="col-sm-8">
+                                    {{ user_subscription.current_period_start|date:"F d, Y" }} - 
+                                    {{ user_subscription.current_period_end|date:"F d, Y" }}
+                                </dd>
+                                
+                                {% if user_subscription.canceled_at %}
+                                    <dt class="col-sm-4">Canceled On</dt>
+                                    <dd class="col-sm-8">{{ user_subscription.canceled_at|date:"F d, Y" }}</dd>
+                                {% endif %}
+                            </dl>
+                            
+                            {% if user_subscription.status == 'active' or user_subscription.status == 'trialing' %}
+                                <div class="text-center mt-4">
+                                    <button class="btn btn-danger" onclick="cancelSubscription()">
+                                        Cancel Subscription
+                                    </button>
+                                </div>
+                            {% else %}
+                                <div class="text-center mt-4">
+                                    <a href="{% url 'pricing' %}" class="btn btn-primary">
+                                        Reactivate Subscription
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <p>You don't have an active subscription.</p>
+                            <a href="{% url 'pricing' %}" class="btn btn-primary">
+                                View Plans
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
-<style>
-  .subscription-status-card {
-    border-radius: 1.5rem;
-    background: #fff;
-  }
-  .btn-gradient-primary {
-    background: linear-gradient(90deg, #4f8cff 0%, #6f6fff 100%);
-    color: #fff;
-    border: none;
-    border-radius: 2rem;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(79,140,255,0.15);
-  }
-  .btn-gradient-primary:hover {
-    background: linear-gradient(90deg, #6f6fff 0%, #4f8cff 100%);
-    color: #fff;
-  }
-</style>
+
+{% if user_subscription and user_subscription.status != 'canceled' %}
+<script>
+function cancelSubscription() {
+    if (confirm('Are you sure you want to cancel your subscription?')) {
+        fetch('{% url "cancel_subscription" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Error canceling subscription: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error canceling subscription. Please try again.');
+        });
+    }
+}
+</script>
+{% endif %}
 {% endblock %}
