@@ -61,7 +61,66 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'main_project.middleware.SecurityHeadersMiddleware',
 ]
+
+# Security Headers
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+CSP_HEADER = {
+    'default-src': ["'self'", "https://*.paddle.com", "https://*.bootstrapcdn.com", "https://cdn.jsdelivr.net"],
+    'script-src': [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://*.paddle.com",
+        "https://cdn.paddle.com",
+        "https://code.jquery.com",
+        "https://cdn.jsdelivr.net",
+        "https://stackpath.bootstrapcdn.com"
+    ],    'style-src': [
+        "'self'",
+        "'unsafe-inline'",
+        "https://stackpath.bootstrapcdn.com",
+        "https://cdn.jsdelivr.net",
+        "https://fonts.googleapis.com",
+        "https://*.paddle.com",
+        "https://sandbox-cdn.paddle.com"
+    ],
+    'font-src': [
+        "'self'",
+        "https://fonts.gstatic.com",
+        "https://cdn.jsdelivr.net"
+    ],
+    'frame-src': [
+        "'self'",
+        "https://*.paddle.com",
+        "https://sandbox-buy.paddle.com",
+        "https://sandbox-checkout.paddle.com"
+    ],
+    'frame-ancestors': [
+        "'self'",
+        "http://127.0.0.1:8000",
+        "http://localhost:8000"
+    ],
+    'connect-src': [
+        "'self'",
+        "https://*.paddle.com",
+        "https://*.paddleapi.com",
+        "https://sandbox-checkout.paddle.com",
+        "https://sandbox-buy.paddle.com",
+        "https://sandbox-checkout-service.paddle.com",
+        "wss://*.paddle.com"
+    ],
+    'img-src': [
+        "'self'",
+        "data:",
+        "https://*.paddle.com",
+        "https://cdn.jsdelivr.net",
+        "https://*.githubusercontent.com"
+    ]
+}
 
 ROOT_URLCONF = 'main_project.urls'
 
@@ -118,15 +177,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-CSP_FRAME_ANCESTORS = [
-    "'self'",
-    "https://*.paddle.com",
-    "https://*.paddlecheckout.com",
-    "https://*.paddlepayments.com",
-    "https://*.paddleapi.com",
-    "https://*.billing.paddle.com",
-    "https://buy.paddle.com",
-]
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -193,3 +244,32 @@ DEFAULT_FROM_EMAIL = 'jasonachin33@example.com>'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'knowbite': {  # This will catch all loggers in your knowbite app
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+    },
+}

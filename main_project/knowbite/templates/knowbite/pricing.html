@@ -35,14 +35,16 @@
 document.addEventListener('DOMContentLoaded', function() {
   function setupPaddleButtons() {
     if (window.Paddle) {
-      Paddle.Environment.set('{{ paddle_sandbox|yesno:"sandbox,production" }}');      Paddle.Initialize({
+      Paddle.Environment.set('{{ paddle_sandbox|yesno:"sandbox,production" }}');
+      Paddle.Initialize({
         token: '{{ paddle_client_token }}',
       });
 
       document.querySelectorAll('.subscribe-btn').forEach(function(btn) {
         btn.addEventListener('click', async function() {
           const planId = btn.getAttribute('data-plan-id');
-          try {            const checkout = await Paddle.Checkout.open({
+          try {
+            const checkout = await Paddle.Checkout.open({
               items: [{
                 priceId: planId,
                 quantity: 1
@@ -50,15 +52,14 @@ document.addEventListener('DOMContentLoaded', function() {
               settings: {
                 displayMode: 'overlay',
                 theme: 'light',
-                successUrl: window.location.origin + '/subscription/status/',
+                successUrl: window.location.origin + '/subscription/success/',
                 locale: 'en'
               },
               customData: {
-                user_email: '{{ request.user.email }}'
+                user_email: '{{ request.user.email }}',
+                user_id: '{{ request.user.id }}'
               }
             });
-              // Paddle v2 checkout doesn't return a status
-            // The checkout will automatically redirect on completion
             console.log('Checkout opened:', checkout);
           } catch (error) {
             console.error('Checkout error:', error);
