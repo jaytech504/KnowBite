@@ -78,7 +78,8 @@ def upload_file(request):
             # Check file size and other limits
             file_size_mb = uploaded_file.file.size / (1024 * 1024)  # Convert to MB
               # For PDFs, get page count
-            pages = None            if uploaded_file.file_type == 'pdf':
+            pages = None            
+            if uploaded_file.file_type == 'pdf':
                 try:
                     # Get the file content as bytes
                     file_content = uploaded_file.file.read()
