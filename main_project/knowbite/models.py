@@ -69,18 +69,35 @@ class ChatMessage(models.Model):
 
 class Plan(models.Model):
     PLAN_CHOICES = [
+        ('free', 'Free'),
         ('basic', 'Basic'),
         ('pro', 'Pro'),
     ]
     BILLING_CHOICES = [
+        ('free', 'Free'),
         ('monthly', 'Monthly'),
         ('yearly', 'Yearly'),
-    ]
+    ]    
     name = models.CharField(max_length=20, choices=PLAN_CHOICES)
     billing_period = models.CharField(max_length=10, choices=BILLING_CHOICES, default='monthly')
+    is_free = models.BooleanField(default=False)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     description = models.TextField()
-    paddle_plan_id = models.CharField(max_length=100, unique=True)  # This will store the Paddle Billing price ID
+    paddle_plan_id = models.CharField(max_length=100, unique=True, blank=True, null=True)  # Optional for free plan
+    
+    @property
+    def requires_payment(self):
+        """Check if this plan requires payment"""
+        return not self.is_free
+        
+    def save(self, *args, **kwargs):
+        # Auto-set billing period for free plan
+        if self.name == 'free':
+            self.is_free = True
+            self.billing_period = 'free'
+            self.price = 0
+            self.paddle_plan_id = None
+        super().save(*args, **kwargs)
 
     # Limits
     pdf_uploads_per_month = models.IntegerField()
@@ -142,3 +159,103 @@ class UserSubscription(models.Model):
         if self.current_period_end and self.current_period_end < now:
             return 'past_due'
         return self.status
+
+    def can_upload_file(self, file_type, file_size_mb=None, duration_min=None, pages=None):
+        """Check if user can upload a new file based on their plan limits"""
+        from django.utils import timezone
+        if not self.is_active:
+            return False, "Your subscription is not active"
+
+        # Get the current month's start
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Count uploads this month
+        monthly_uploads = UploadedFile.objects.filter(
+            user=self.user,
+            uploaded_at__gte=month_start,
+            file_type=file_type
+        ).count()        
+        remaining_uploads = 0
+        if file_type == 'pdf':
+            remaining_uploads = self.plan.pdf_uploads_per_month - monthly_uploads
+            if remaining_uploads <= 0:
+                return False, f"You've reached your monthly limit of {self.plan.pdf_uploads_per_month} PDF uploads"            
+            if file_size_mb and file_size_mb > self.plan.pdf_max_size_mb:
+                return False, f"File must be less than or equal to {self.plan.pdf_max_size_mb}MB (current: {round(file_size_mb, 1)}MB)"
+            if pages and pages > self.plan.pdf_max_pages:
+                return False, f"PDF must be {self.plan.pdf_max_pages} pages or less (current: {pages} pages)"
+
+        elif file_type == 'audio':
+            remaining_uploads = self.plan.audio_uploads_per_month - monthly_uploads
+            if remaining_uploads <= 0:
+                return False, f"You've reached your monthly limit of {self.plan.audio_uploads_per_month} audio uploads"
+            if file_size_mb and file_size_mb > self.plan.audio_max_size_mb:
+                return False, f"File must be less than or equal to {self.plan.audio_max_size_mb}MB (current: {round(file_size_mb, 1)}MB)"
+            if duration_min and duration_min > self.plan.audio_max_length_min:
+                return False, f"Audio must be {self.plan.audio_max_length_min} minutes or less (current: {round(duration_min, 1)} minutes)"
+
+        elif file_type == 'youtube':
+            remaining_uploads = self.plan.youtube_links_per_month - monthly_uploads
+            if remaining_uploads <= 0:
+                return False, f"You've reached your monthly limit of {self.plan.youtube_links_per_month} YouTube links"            
+            if duration_min and duration_min > self.plan.youtube_max_length_min:
+                return False, f"Video must be {self.plan.youtube_max_length_min} minutes or less (current: {round(duration_min, 1)} minutes)"
+
+        # Add a more informative success message with remaining uploads
+        return True, f"OK - You have {remaining_uploads} {file_type} uploads remaining this month"
+
+        return True, "OK"
+
+    def can_generate_quiz(self, file_id):
+        """Check if user can generate a new quiz"""
+        from django.utils import timezone
+        if not self.is_active:
+            return False, "Your subscription is not active"
+
+        # Get the current month's start
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Count quizzes this month
+        from result.models import Quiz  # Import here to avoid circular import
+        monthly_quizzes = Quiz.objects.filter(
+            user=self.user,
+            created_at__gte=month_start
+        ).count()        
+        remaining_quizzes = self.plan.quizzes_per_month - monthly_quizzes
+        if remaining_quizzes <= 0:
+            return False, f"You've reached your monthly limit of {self.plan.quizzes_per_month} quizzes"
+
+        return True, f"OK - You have {remaining_quizzes} quizzes remaining this month"
+
+    def can_regenerate_summary(self, file_id):
+        """Check if user can regenerate a summary"""
+        if not self.is_active:
+            return False, "Your subscription is not active"
+
+        # Count summary regenerations for this file
+        summary_count = Summary.objects.filter(
+            user=self.user,
+            uploaded_file_id=file_id
+        ).count()
+        remaining_regenerations = self.plan.summary_regenerations_per_file - summary_count
+        if remaining_regenerations <= 0:
+            return False, f"You've reached the limit of {self.plan.summary_regenerations_per_file} summary regenerations for this file"
+
+        return True, f"OK - You have {remaining_regenerations} summary regenerations remaining for this file"
+    def can_send_chat_message(self, file_id):
+        """Check if user can send another chat message"""
+        if not self.is_active:
+            return False, "Your subscription is not active"
+
+        # Count messages for this file
+        message_count = ChatMessage.objects.filter(
+            user=self.user,
+            file_id=file_id
+        ).count()        
+        remaining_messages = self.plan.chatbot_messages_per_file - message_count
+        if remaining_messages <= 0:
+            return False, f"You've reached the limit of {self.plan.chatbot_messages_per_file} messages for this file"
+
+        return True, f"OK - You have {remaining_messages} messages remaining for this file"

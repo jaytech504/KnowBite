@@ -33,7 +33,11 @@ SECRET_KEY = 'django-insecure-d)@r43sfdo&nx3h5p)z-g^qnc74z^3rzvf^8n6ei8v@sa4v5q1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'e28b-105-112-178-52.ngrok-free.app',
+]
 
 
 # Application definition
@@ -210,9 +214,9 @@ ASSEMBLYAI_API_KEY = os.getenv('ASSEMBLYAI_API_KEY')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # Paddle configuration
-PADDLE_VENDOR_ID = os.getenv('PADDLE_ID')
-PADDLE_API_KEY = os.getenv('PADDLE_API_KEY')
-PADDLE_CLIENT_TOKEN = os.getenv('PADDLE_CLIENT_TOKEN')  # Add this line
+PADDLE_VENDOR_ID = os.getenv('PADDLE_VENDOR_ID')
+PADDLE_CLIENT_TOKEN = os.getenv('PADDLE_CLIENT_TOKEN')
+PADDLE_API_KEY = os.getenv('PADDLE_API_KEY')  
 
 # These should match the paddle_plan_id values you set in the admin for each plan
 PADDLE_BASIC_MONTHLY_PLAN_ID = os.getenv('PADDLE_BASIC_MONTHLY_PLAN_ID')

@@ -152,10 +152,21 @@ def base(request, file_id):
 @login_required
 def summary_result(request, file_id):
     """Handle document summary and chat interactions"""
-    uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
-
-    # Handle "regenerate" requests
+    uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)    # Handle "regenerate" requests
     if "regenerate" in request.GET:
+        # Check regeneration limits
+        try:
+            user_subscription = request.user.usersubscription
+            can_regenerate, message = user_subscription.can_regenerate_summary(file_id)
+            if not can_regenerate:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'error': message}, status=403)
+                messages.error(request, message)
+                return redirect('summary', file_id=file_id)
+        except Exception as e:
+            messages.error(request, "Error checking subscription limits")
+            return redirect('summary', file_id=file_id)
+
         try:
             summary = generate_or_retrieve_summary(request, uploaded_file)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -275,7 +286,15 @@ def generate_or_retrieve_summary(request, uploaded_file):
 
 @login_required
 def handle_chat_request(request, uploaded_file):
-    """Process chat messages with Gemini"""
+    """Process chat messages with Gemini"""    # Check chat message limits
+    try:
+        user_subscription = request.user.usersubscription
+        can_chat, message = user_subscription.can_send_chat_message(uploaded_file.id)
+        if not can_chat:
+            return JsonResponse({'error': message}, status=403)
+    except Exception as e:
+        return JsonResponse({'error': 'Error checking chat limits'}, status=500)
+
     if request.POST.get('message') != None:
         user_message = request.POST.get('message').strip()
     else:
@@ -404,6 +423,18 @@ def quiz_options(request, file_id):
 def take_quiz(request, file_id):
     """Generates and displays the quiz."""
     uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)
+    
+    # Check quiz generation limits
+    try:
+        user_subscription = request.user.usersubscription
+        can_generate, message = user_subscription.can_generate_quiz(file_id)
+        if not can_generate:
+            messages.error(request, message)
+            return redirect('quiz_options', file_id=file_id)
+    except Exception as e:
+        messages.error(request, "Error checking quiz limits")
+        return redirect('quiz_options', file_id=file_id)
+    
     summary_instance = get_object_or_404(Summary, uploaded_file=uploaded_file)
 
     num_questions = int(request.GET.get("num_questions", 10))

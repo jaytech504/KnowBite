@@ -10,6 +10,7 @@ import json
 from dateutil import parser
 from django.utils import timezone
 import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +39,12 @@ def create_or_update_subscription(user, subscription_id, plan, trial_end=None,
 
 @login_required
 def pricing(request):
-    plans = Plan.objects.all().order_by('price')    
+    plans = Plan.objects.all().order_by('price')
+    user_subscription = UserSubscription.objects.get(user=request.user)
+    
     return render(request, 'knowbite/pricing.html', {
         'plans': plans,
+        'current_plan': user_subscription.plan,
         'paddle_vendor_id': settings.PADDLE_VENDOR_ID,
         'paddle_sandbox': settings.PADDLE_SANDBOX,
         'paddle_client_token': settings.PADDLE_CLIENT_TOKEN,
@@ -100,52 +104,67 @@ def paddle_webhook(request):
         payload = json.loads(request.body)
         event_type = payload.get('event_type')
         data = payload.get('data', {})
-        
+        print('--- Paddle Webhook Received ---')
+        print('Event:', event_type)
+        print('Payload:', json.dumps(payload, indent=2))
         logger.info(f"Received webhook event: {event_type}")
         logger.debug(f"Webhook payload: {payload}")
         
         subscription_id = data.get('subscription_id')
+          # Get common data from webhook
+        custom_data = data.get('custom_data', {})
+        user_id = custom_data.get('user_id')
         
-        if event_type == 'subscription.created':
-            custom_data = data.get('custom_data', {})
-            user_id = custom_data.get('user_id')
-            logger.info(f"Webhook custom_data: {custom_data}")
-            if not user_id:
-                logger.error("No user_id in custom_data!")
-                return JsonResponse({'status': 'error', 'message': 'No user_id in custom_data'}, status=400)
+        if event_type in ['subscription.created', 'transaction.completed', 'transaction.paid']:
+            # These events create or update subscriptions
             try:
                 user = User.objects.get(id=user_id)
-                logger.info(f"Found user for webhook: {user}")
             except User.DoesNotExist:
-                logger.error(f"User with id {user_id} not found!")
                 return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+            
+            # Get the plan from the price_id
             price_id = data.get('items', [{}])[0].get('price', {}).get('id')
-            logger.info(f"Webhook price_id: {price_id}")
             try:
                 plan = Plan.objects.get(paddle_plan_id=price_id)
-                logger.info(f"Found plan for webhook: {plan}")
             except Plan.DoesNotExist:
-                logger.error(f"Plan with paddle_plan_id {price_id} not found!")
                 return JsonResponse({'status': 'error', 'message': 'Plan not found'}, status=404)
-            subscription = create_or_update_subscription(
-                user=user,
-                subscription_id=subscription_id,
-                plan=plan,
-                trial_end=parse_iso_date(data.get('trial_end')),
-                current_period_start=parse_iso_date(data.get('current_period_start')),
-                current_period_end=parse_iso_date(data.get('current_period_end')),
-            )
-            if subscription:
-                logger.info(f"Subscription created/updated: {subscription}")
+            
+            # Create or update subscription
+            defaults = {
+                'plan': plan,
+                'status': 'trialing' if data.get('trial_end') else 'active',
+                'is_active': True,
+                'last_webhook_received': timezone.now()
+            }
+            
+            # Add subscription_id if available
+            if subscription_id:
+                defaults['paddle_subscription_id'] = subscription_id
+            
+            # Add dates if available
+            if data.get('trial_end'):
+                defaults['trial_end'] = parse_iso_date(data.get('trial_end'))
+            if data.get('billing_period'):
+                period = data.get('billing_period', {})
+                defaults['current_period_start'] = parse_iso_date(period.get('starts_at'))
+                defaults['current_period_end'] = parse_iso_date(period.get('ends_at'))
             else:
-                logger.error("Failed to create/update subscription!")
+                defaults['current_period_start'] = parse_iso_date(data.get('current_period_start'))
+                defaults['current_period_end'] = parse_iso_date(data.get('current_period_end'))
+            
+            subscription, created = UserSubscription.objects.update_or_create(
+                user=user,
+                defaults=defaults
+            )
+            logger.info(f"Created/Updated subscription for {event_type}: user={user.email}, plan={plan}, subscription_id={subscription_id}")
             return JsonResponse({'status': 'success'})
         
-        # If not subscription.created, try to find existing subscription
-        try:
-            user_sub = UserSubscription.objects.get(paddle_subscription_id=subscription_id)
-        except UserSubscription.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Subscription not found'}, status=404)
+        # For events that update existing subscriptions, find the subscription
+        if subscription_id:
+            try:
+                user_sub = UserSubscription.objects.get(paddle_subscription_id=subscription_id)
+            except UserSubscription.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Subscription not found'}, status=404)
 
         # Update last webhook timestamp
         user_sub.last_webhook_received = timezone.now()
@@ -169,14 +188,107 @@ def paddle_webhook(request):
             user_sub.status = 'active'
             user_sub.trial_end = timezone.now()
             
-        user_sub.save()
-        return JsonResponse({'status': 'success'})
+        elif event_type == 'transaction.updated':
+            # Get user from custom_data
+            custom_data = data.get('custom_data', {})
+            user_id = custom_data.get('user_id')
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+            # Find or create UserSubscription
+            user_sub, _ = UserSubscription.objects.get_or_create(user=user)
+            # Set paddle_subscription_id if not set
+            if not user_sub.paddle_subscription_id and data.get('subscription_id'):
+                user_sub.paddle_subscription_id = data['subscription_id']
+            # Update other fields as needed
+            user_sub.status = 'active' if data.get('status') == 'completed' else data.get('status', user_sub.status)
+            user_sub.is_active = user_sub.status in ['trialing', 'active']
+            period = data.get('billing_period', {})
+            user_sub.current_period_start = parse_iso_date(period.get('starts_at'))
+            user_sub.current_period_end = parse_iso_date(period.get('ends_at'))
+            user_sub.last_webhook_received = timezone.now()
+            user_sub.save()
+            return JsonResponse({'status': 'success'})
+        
+        elif event_type == 'transaction.paid':
+            # Handle transaction.paid event (no subscription_id, but has user info and price_id)
+            custom_data = data.get('custom_data', {})
+            user_id = custom_data.get('user_id')
+            price_id = None
+            items = data.get('items', [])
+            if items and 'price' in items[0]:
+                price_id = items[0]['price'].get('id')
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+            try:
+                plan = Plan.objects.get(paddle_plan_id=price_id)
+            except Plan.DoesNotExist:
+                plan = None
+            # Create or update subscription (no paddle_subscription_id yet)
+            subscription, created = UserSubscription.objects.update_or_create(
+                user=user,
+                defaults={
+                    'plan': plan,
+                    'status': 'active',
+                    'is_active': True,
+                    'last_webhook_received': timezone.now()
+                }
+            )
+            logger.info(f"Handled transaction.paid for user {user.email}, plan {plan}, created={created}")
+            return JsonResponse({'status': 'success'})
+        
+        elif event_type == 'transaction.completed':
+            # Handle transaction.completed event
+            custom_data = data.get('custom_data', {})
+            user_id = custom_data.get('user_id')
+            subscription_id = data.get('subscription_id')
+            price_id = None
+            items = data.get('items', [])
+            if items and 'price' in items[0]:
+                price_id = items[0]['price'].get('id')
+
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+
+            try:
+                plan = Plan.objects.get(paddle_plan_id=price_id)
+            except Plan.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Plan not found'}, status=404)
+
+            # Get billing period info
+            billing_period = data.get('billing_period', {})
+            period_start = parse_iso_date(billing_period.get('starts_at'))
+            period_end = parse_iso_date(billing_period.get('ends_at'))
+
+            # Create or update subscription
+            subscription, created = UserSubscription.objects.update_or_create(
+                user=user,
+                defaults={
+                    'paddle_subscription_id': subscription_id,
+                    'plan': plan,
+                    'status': 'active',
+                    'is_active': True,
+                    'current_period_start': period_start,
+                    'current_period_end': period_end,
+                    'last_webhook_received': timezone.now()
+                }
+            )
+            logger.info(f"Handled transaction.completed for user {user.email}, plan {plan}, subscription_id {subscription_id}")
+            return JsonResponse({'status': 'success'})
         
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    # If event type was not handled above, return a generic response
+    return JsonResponse({'status': 'ignored', 'message': f'Unhandled event type: {event_type}'})
 
 def parse_iso_date(date_str):
     """Parse ISO format date string to datetime object"""
@@ -218,3 +330,52 @@ Your KnowBite subscription status has been updated:
             [user_sub.user.email],
             fail_silently=True,
         )
+
+from django.views.decorators.http import require_POST
+
+@require_POST
+@login_required
+def cancel_subscription(request):
+    try:
+        user_subscription = UserSubscription.objects.get(user=request.user)
+        if not user_subscription.paddle_subscription_id:
+            return JsonResponse({'status': 'error', 'message': 'No Paddle subscription ID found.'}, status=400)
+
+        # Paddle API endpoint
+        if getattr(settings, 'PADDLE_SANDBOX', False):
+            paddle_api_url = 'https://sandbox-api.paddle.com/subscriptions/'
+        else:
+            paddle_api_url = 'https://api.paddle.com/subscriptions/'
+        cancel_url = f"{paddle_api_url}{user_subscription.paddle_subscription_id}/cancel"
+
+        headers = {
+            'Authorization': f'Bearer {settings.PADDLE_API_KEY}',
+            'Content-Type': 'application/json',
+        }        
+        try:
+            response = requests.post(cancel_url, headers=headers)
+            response_data = response.json() if response.text else {}
+            
+            if response.status_code in (200, 204):
+                user_subscription.status = 'canceled'
+                user_subscription.is_active = False
+                user_subscription.canceled_at = timezone.now()
+                user_subscription.save()
+                logger.info(f"Successfully canceled subscription {user_subscription.paddle_subscription_id} for user {request.user.email}")
+                return JsonResponse({'status': 'success'})
+            else:
+                error_message = response_data.get('error', {}).get('message', response.text)
+                logger.error(f"Failed to cancel subscription: {error_message}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Paddle API error: {error_message}',
+                    'code': response.status_code
+                }, status=400)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Network error canceling subscription: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Network error while contacting Paddle API'
+            }, status=500)
+    except UserSubscription.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'No active subscription found.'}, status=404)
