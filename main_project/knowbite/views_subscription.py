@@ -54,8 +54,29 @@ def pricing(request):
 def subscription_status(request):
     """View to display subscription status"""
     try:
-        user_subscription = UserSubscription.objects.get(user=request.user)
-        logger.info(f"Found subscription for user {request.user.email}: {user_subscription.status}")
+        user_subscription = UserSubscription.objects.select_related('plan').get(user=request.user)
+        
+        # Check for expired cancelled subscriptions and revert to free plan
+        if user_subscription.status == 'canceled' and user_subscription.current_period_end:
+            if timezone.now() > user_subscription.current_period_end:
+                # Get or create free plan
+                from .signals import get_or_create_free_plan
+                free_plan = get_or_create_free_plan()
+                
+                # Update subscription to free plan
+                user_subscription.plan = free_plan
+                user_subscription.status = 'active'
+                user_subscription.is_active = True
+                user_subscription.paddle_subscription_id = None
+                user_subscription.current_period_start = timezone.now()
+                user_subscription.current_period_end = None
+                user_subscription.save()
+                
+                logger.info(f"Reverted cancelled subscription to free plan for user {request.user.email}")
+        
+        # Get fresh subscription data after potential update
+        user_subscription.refresh_from_db()
+        logger.info(f"Found subscription for user {request.user.email}: {user_subscription.status} - Plan: {user_subscription.plan.name}")
     except UserSubscription.DoesNotExist:
         user_subscription = None
         logger.info(f"No subscription found for user {request.user.email}")
@@ -100,6 +121,19 @@ logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def paddle_webhook(request):
+    """
+    Handle Paddle webhook notifications
+    """
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Only POST requests are allowed'}, status=405)
+
+    # Log raw request details for debugging
+    logger.info('=== Paddle Webhook Received ===')
+    logger.info(f'Request Method: {request.method}')
+    logger.info(f'Content Type: {request.content_type}')
+    logger.info(f'Headers: {dict(request.headers)}')
+    logger.info(f'Body: {request.body.decode("utf-8")}')
+
     try:
         payload = json.loads(request.body)
         event_type = payload.get('event_type')
@@ -108,7 +142,28 @@ def paddle_webhook(request):
         print('Event:', event_type)
         print('Payload:', json.dumps(payload, indent=2))
         logger.info(f"Received webhook event: {event_type}")
-        logger.debug(f"Webhook payload: {payload}")
+        logger.info(f"Full webhook payload: {json.dumps(payload, indent=2)}")
+        
+        # Debug information about the request
+        logger.info(f"Request headers: {dict(request.headers)}")
+        logger.info(f"Request method: {request.method}")
+        logger.info(f"Request content type: {request.content_type if hasattr(request, 'content_type') else 'Not set'}")
+        
+        # Print the actual data structure we're working with
+        logger.info(f"Custom data: {data.get('custom_data', {})}")
+        logger.info(f"Items data: {data.get('items', [])}")
+        logger.info(f"Subscription ID: {data.get('subscription_id')}")
+        
+        if event_type in ['subscription.created', 'transaction.completed', 'transaction.paid']:
+            # Get price ID from items
+            items = data.get('items', [])
+            price_id = None
+            if items and len(items) > 0:
+                price = items[0].get('price', {})
+                price_id = price.get('id') if isinstance(price, dict) else None
+                logger.info(f"Found price_id: {price_id}")
+            else:
+                logger.warning("No items found in webhook data")
         
         subscription_id = data.get('subscription_id')
           # Get common data from webhook
@@ -137,9 +192,8 @@ def paddle_webhook(request):
                 'last_webhook_received': timezone.now()
             }
             
-            # Add subscription_id if available
-            if subscription_id:
-                defaults['paddle_subscription_id'] = subscription_id
+            # Add subscription_id if available            if subscription_id:
+            defaults['paddle_subscription_id'] = subscription_id
             
             # Add dates if available
             if data.get('trial_end'):
@@ -152,10 +206,26 @@ def paddle_webhook(request):
                 defaults['current_period_start'] = parse_iso_date(data.get('current_period_start'))
                 defaults['current_period_end'] = parse_iso_date(data.get('current_period_end'))
             
-            subscription, created = UserSubscription.objects.update_or_create(
-                user=user,
-                defaults=defaults
-            )
+            # Get the existing subscription if any
+            try:
+                existing_sub = UserSubscription.objects.get(user=user)
+                # Update the existing subscription
+                for key, value in defaults.items():
+                    setattr(existing_sub, key, value)
+                existing_sub.plan = plan  # Explicitly set the plan
+                existing_sub.save()
+                subscription = existing_sub
+                created = False
+                logger.info(f"Updated existing subscription for user {user.email} to plan {plan.name}")
+            except UserSubscription.DoesNotExist:
+                # Create new subscription
+                subscription = UserSubscription.objects.create(
+                    user=user,
+                    plan=plan,
+                    **defaults
+                )
+                created = True
+                logger.info(f"Created new subscription for user {user.email} with plan {plan.name}")
             logger.info(f"Created/Updated subscription for {event_type}: user={user.email}, plan={plan}, subscription_id={subscription_id}")
             return JsonResponse({'status': 'success'})
         

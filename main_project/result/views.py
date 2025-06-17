@@ -18,7 +18,7 @@ from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import json
-from pytube import YouTube
+
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from knowbite.models import UploadedFile, Summary, ChatMessage, ExtractedText
@@ -37,7 +37,7 @@ generation_config = {
     "temperature": 0.7,  # Adjust creativity level
     "top_p": 0.9,
     "top_k": 50,
-    "max_output_tokens": 1500,
+    "max_output_tokens": 5000,
 }
 
 
@@ -99,29 +99,96 @@ def extract_text_from_txt(txt_path):
     
 
 
-def generate_summary_with_gemini(text):
-    """Send extracted text to Gemini API and get structured summary."""
+def generate_summary_with_gemini(text, plan_type):
+    """Send extracted text to Gemini API and get structured summary based on plan type."""
 
-    prompt = f"""
-    You are an expert summarizer on educational content. 
-    Summarize the following text in a **engaging and reader-friendly** with:
-    - Use bold and clear **section headers** (like Introduction, Key Points, Conclusion) using <h4> html tags.
-    - Use **clear headings and bullet points**.
-    - Keep it **concise yet informative**.
-    - When including mathematical formulas, please format them using LaTeX notation enclosed within dollar signs ($).
-      For example, for an equation like 'y equals x squared', you should output '$y = x^2$'. 
-      For subscripts, use 'a_i', for superscripts use 'b^2' and other complex ones like summation, intergrals etc.
-    - Use nicely formatted html tables **only if necessary** for comparisons, features etc.
-    - Add important and related images using html img tag **if necessary**.
-    - Use diagrams such as graphs, circuit design etc **when necessary**.
-    - Include examples and explanations where needed.
-    - Use appropriate emojis before a section header.
-    - A **concise conclusion** summarizing the main ideas.
+    base_prompt = """You are an expert summarizer on educational content."""
     
-    Text: {text}
-    """
-    response = model.generate_content(prompt, generation_config=generation_config)
+    if plan_type.lower() == 'free':
+        prompt = f"""{base_prompt}
+        Create a clear and concise summary of the following text with:
+        - Use emojis for section headers to make it engaging 📚
+        - Format with clear **section headers** (like 📋 Introduction, 🎯 Key Points, 🎬 Conclusion) in <h4> tags
+        - Use bullet points for key information
+        - Keep it concise but informative
+        - When there are mathematical formulas, use LaTeX notation ($formula$)
+          Example: 'y equals x squared' becomes '$y = x^2$'
+        - Use simple tables for important comparisons only
+        - Focus on essential information and main concepts
+        - Keep sections brief and to the point
+        - Keep summary under 500 words
+        Text: {text}
+        """    
+    elif plan_type.lower() == 'basic':
+        prompt = f"""{base_prompt}
+        Create an enhanced and visually engaging summary that reads like a blog post:
+        
+        Content Structure:
+        -**Don't include table of contents**
+        - Start with an engaging introduction
+        - Use professional section headers with themed emojis in <h4> tags
+        - Break down concepts into clear sections
+        - Include practical examples where relevant
+        - Add a comprehensive conclusion
+        
+        Visual Elements:
+        - Create clean tables for data comparisons
+        - Add basic diagrams where helpful
+        - Use LaTeX notation for mathematical formulas ($formula$)
+        
+        Enhanced Features:
+        - Include helpful notes and tips
+        - Use clear formatting for better readability
+        - Add basic cross-references between concepts
 
+        Formatting:
+        - Consistent heading hierarchy (h4, h5)
+        - Professional equation formatting
+        - Clean and organized layout
+
+        Text: {text}
+        """
+    elif plan_type.lower() == 'pro':
+        prompt = f"""{base_prompt}
+        Create a premium, comprehensive, and highly engaging summary that reads like a professional educational resource:
+        
+        Content Structure:
+        -**Don't add table of contents**
+        - Begin with a compelling hook and overview
+        - Use professional section headers with carefully chosen emojis in <h4> tags
+        - Break down complex concepts into digestible sections
+        - Include detailed examples and real-world applications
+        - Create an in-depth yet clear conclusion
+        
+        Visual Elements:
+        - Create professional tables for data comparisons and analysis
+        - Include advanced diagrams, graphs, and flowcharts where appropriate
+        - Use LaTeX notation for mathematical formulas with professional formatting
+        - Include citations and references to academic sources
+        
+        Advanced Formatting:
+        - Professional heading hierarchy (h4, h5)
+        - Syntax-highlighted code snippets where relevant
+        - Publication-quality equation formatting
+        - Clean, professional layout with consistent styling
+        - Interactive elements for enhanced learning
+
+        Text: {text}
+        """
+    else:  # Fallback to free plan if unknown type
+        prompt = f"""{base_prompt}
+        Create a clear and concise summary of the following text with:
+        - Use emojis for section headers to make it engaging 📚
+        - Format with clear **section headers** in <h4> tags
+        - Use bullet points for key information
+        - Keep it concise but informative
+        - When there are mathematical formulas, use LaTeX notation ($formula$)
+        - Focus on essential information and main concepts
+
+        Text: {text}
+        """
+
+    response = model.generate_content(prompt, generation_config=generation_config)
     return response.text if response.text else "No summary available."
 
 # If needed, support long text by summarizing in chunks.
@@ -167,12 +234,12 @@ def summary_result(request, file_id):
             messages.error(request, "Error checking subscription limits")
             return redirect('summary', file_id=file_id)
 
-        try:
+        try:            
             summary = generate_or_retrieve_summary(request, uploaded_file)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
-                    'success': True,
                     'summary': summary,
+                    'success': True,
                     'timestamp': time.time()
                 })
             return redirect('summary', file_id=file_id)
@@ -258,14 +325,28 @@ def generate_or_retrieve_summary(request, uploaded_file):
                 
         except Exception as e:
             print(f"General extraction error: {e}")
-            return f"Error during processing: {str(e)}"
-
-    # Summary generation step
+            return f"Error during processing: {str(e)}"    # Summary generation step
     try:
+        # Get user's plan type
+        try:
+            user_subscription = user.usersubscription
+            if user_subscription.is_active:
+                plan_type = user_subscription.plan.name
+        except Exception as e:
+            print(f"Error getting plan type: {e}")
+
         if len(extracted_text) > 3000:
-            summary = generate_long_summary(extracted_text)
+            # For long texts, process chunks with the same plan type
+            chunks = split_text(extracted_text, max_chars=3000)
+            chunk_summaries = []
+            for chunk in chunks:
+                summary_chunk = generate_summary_with_gemini(chunk, plan_type)
+                chunk_summaries.append(summary_chunk)
+                time.sleep(1)  # Delay to avoid rate limits
+            combined_text = " ".join(chunk_summaries)
+            summary = generate_summary_with_gemini(combined_text, plan_type)
         else:
-            summary = generate_summary_with_gemini(extracted_text)
+            summary = generate_summary_with_gemini(extracted_text, plan_type)
     except Exception as e:
         print(f"Summary generation error: {e}")
         return f"Error generating summary: {str(e)}"

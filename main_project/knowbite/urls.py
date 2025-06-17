@@ -14,6 +14,9 @@ urlpatterns = [
     path('subscription/success/', views_subscription.subscription_success, name='subscription_success'),
     path('subscription-status/', views_subscription.subscription_status, name='subscription_status'),
     path('subscription/debug/', views_subscription.check_subscription_status, name='subscription_debug'),
-    path('paddle/webhook/', views_subscription.paddle_webhook, name='paddle_webhook'),
+    # Ensure exact match for webhook URL
+    path('paddle/webhook', views_subscription.paddle_webhook, name='paddle_webhook'),
+    # Keep old URL pattern for backward compatibility
+    path('paddle/webhook/', views_subscription.paddle_webhook, name='paddle_webhook_slash'),
     path('subscription/cancel/', views_subscription.cancel_subscription, name='cancel_subscription'),
 ]

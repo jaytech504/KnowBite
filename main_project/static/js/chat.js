@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('regenerateBtn');
     const confirmDialog = document.getElementById('regenerateConfirm');
-    const loadingIndicator = document.querySelector('.loading-indicator');
+    const loadingIndicator = document.getElementById('loading-indicator');
     
     // Confirmation Dialog Handlers
     btn.addEventListener('click', function() {
@@ -271,27 +271,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // AJAX Regeneration
     function startRegeneration() {
         btn.classList.add('loading');
-        loadingIndicator.style.display = 'flex';
+        loadingIndicator.style.display = 'block';
+        
+        const csrftoken = getCookie('csrftoken');
         
         fetch(`/summary/${fileId}/?regenerate=true`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': csrftoken
             },
             credentials: 'same-origin'
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.success) {
+            if (data.summary) {
                 // Convert markdown to HTML if needed
                 const processedHtml = marked.parse(data.summary);
                 document.getElementById('summaryContent').innerHTML = processedHtml;
 
                 if (typeof MathJax !== 'undefined') {
-                    MathJax.typesetPromise([summaryContent]).catch(err => {
+                    MathJax.typesetPromise([document.getElementById('summaryContent')]).catch(err => {
                         console.error('MathJax rendering error:', err);
                     });
                 }
+            } else if (data.error) {
+                alert(data.error);
             }
         })
         .catch(error => {

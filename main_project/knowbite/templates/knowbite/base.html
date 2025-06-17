@@ -1,8 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% if title %}
         <title>KnowBite-{{ title }}</title>
@@ -53,7 +52,18 @@
                     <a class="nav-link" href="{% url 'settings' %}">
                         <i data-feather="settings" class="feather"></i>
                         <span class="nav-link-text">Settings</span>
+                    </a>                    
+                    {% if request.user.usersubscription.plan.name == 'free' %}
+                    <a class="nav-link upgrade-btn" href="{% url 'pricing' %}">
+                        <i data-feather="zap" class="feather"></i>
+                        <span class="nav-link-text">Upgrade Plan</span>
                     </a>
+                    {% else %}
+                    <a class="nav-link subscription-status" href="{% url 'subscription_status' %}">
+                        <i data-feather="award" class="feather"></i>
+                        <span class="nav-link-text">Subscription Status</span>
+                    </a>
+                    {% endif %}
                 </nav>
                 
                 <div class="border-top">
@@ -89,7 +99,18 @@
                         <a class="nav-link" href="{% url 'settings' %}">
                             <i data-feather="settings" class="feather"></i>
                             Settings
+                        </a>                        
+                        {% if user.usersubscription.plan.name == 'free' %}
+                        <a class="nav-link upgrade-btn" href="{% url 'pricing' %}">
+                            <i data-feather="zap" class="feather"></i>
+                            Upgrade Plan
                         </a>
+                        {% else %}
+                        <a class="nav-link subscription-status" href="{% url 'subscription_status' %}">
+                            <i data-feather="award" class="feather"></i>
+                            Subscription Status
+                        </a>
+                        {% endif %}
                         <a class="nav-link" href="{% url 'logout' %}">
                             <i data-feather="log-out" class="feather"></i>
                             Logout

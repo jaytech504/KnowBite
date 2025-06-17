@@ -41,14 +41,22 @@ def upload_file(request):
                 return redirect('dashboard')
             
             # Check YouTube upload limits
-            from pytube import YouTube
+            import yt_dlp
             try:
-                yt = YouTube(youtube_link)
-                duration_min = yt.length / 60  # Convert seconds to minutes
-                can_upload, message = user_subscription.can_upload_file('youtube', duration_min=duration_min)
-                if not can_upload:
-                    messages.error(request, message)
-                    return redirect('dashboard')
+                ydl_opts = {
+                    'quiet': True,
+                    'extract_flat': True,
+                    'force_generic_extractor': True,
+                    'no_warnings': True
+                }
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(youtube_link, download=False)
+                    duration_min = info.get('duration', 0) / 60  # Convert seconds to minutes
+                    print(duration_min)
+                    can_upload, message = user_subscription.can_upload_file('youtube', duration_min=duration_min)
+                    if not can_upload:
+                        messages.error(request, message)
+                        return redirect('dashboard')
             except Exception as e:
                 messages.error(request, f"Error processing YouTube link: {str(e)}")
                 return redirect('dashboard')
@@ -93,8 +101,6 @@ def upload_file(request):
                     print(f"Error counting PDF pages: {str(e)}")
                     pages = None
             
-            print(pages)
-            print(file_size_mb)
             # For audio, get duration
             duration_min = None
             if uploaded_file.file_type == 'audio':
