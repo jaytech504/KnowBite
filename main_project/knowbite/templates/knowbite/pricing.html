@@ -1,98 +1,149 @@
 {% extends "knowbite/base.html" %}
 {% block content %}
-<div class="container py-5">
-  <h2 class="text-center mb-4">Choose Your Plan</h2>
-  <div class="row justify-content-center">
-    {% for plan in plans %}
-    <div class="col-md-5 col-lg-4 mb-4">
-      <div class="card shadow border-0 h-100 pricing-card">
-        <div class="card-body d-flex flex-column">
-          <h4 class="card-title text-center mb-2">{{ plan.get_name_display }} <span class="badge bg-primary ms-2">{{ plan.get_billing_period_display }}</span></h4>
-          <h2 class="text-center fw-bold mb-3">${{ plan.price }}<small class="fs-6 text-muted">/{{ plan.get_billing_period_display|lower }}</small></h2>
-          <p class="text-center text-muted mb-3">{{ plan.description }}</p>
-          <ul class="list-group list-group-flush mb-4">
-            <li class="list-group-item">PDF Uploads: <b>{% if plan.pdf_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.pdf_uploads_per_month }}{% endif %}</b></li>
-            <li class="list-group-item">PDF Max Size: <b>{{ plan.pdf_max_size_mb }}MB</b></li>
-            <li class="list-group-item">PDF Max Pages: <b>{{ plan.pdf_max_pages }}</b></li>
-            <li class="list-group-item">Audio Uploads: <b>{% if plan.audio_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.audio_uploads_per_month }}{% endif %}</b></li>
-            <li class="list-group-item">Audio Max Size: <b>{{ plan.audio_max_size_mb }}MB</b></li>
-            <li class="list-group-item">Audio Max Length: <b>{{ plan.audio_max_length_min }} min</b></li>
-            <li class="list-group-item">YouTube Links: <b>{% if plan.youtube_links_per_month >= 9999 %}Unlimited{% else %}{{ plan.youtube_links_per_month }}{% endif %}</b></li>
-            <li class="list-group-item">YouTube Max Length: <b>{{ plan.youtube_max_length_min }} min</b></li>
-            <li class="list-group-item">Quizzes: <b>{% if plan.quizzes_per_month >= 9999 %}Unlimited{% else %}{{ plan.quizzes_per_month }}{% endif %}</b></li>
-            <li class="list-group-item">Summary Regenerations: <b>{% if plan.summary_regenerations_per_file >= 9999 %}Unlimited{% else %}{{ plan.summary_regenerations_per_file }}{% endif %} per file</b></li>
-            <li class="list-group-item">Chatbot Messages: <b>{% if plan.chatbot_messages_per_file >= 9999 %}Unlimited{% else %}{{ plan.chatbot_messages_per_file }}{% endif %} per file</b></li>
-          </ul>
-          <button class="btn btn-gradient-primary mt-auto w-100 subscribe-btn" data-plan-id="{{ plan.paddle_plan_id }}">Subscribe</button>
+<style>
+/* ...existing styles... */
+.price-card {
+    display: none;
+}
+
+.price-card.active {
+    display: block;
+}
+</style>
+
+<div class="pricing-header text-center">
+    <h1 class="display-4 mb-3">Simple, Transparent Pricing</h1>
+    <p class="lead mb-4">Choose the perfect plan for your learning needs</p>
+    
+    <div class="period-toggle-container">
+        <div class="period-toggle">
+            <input type="radio" id="monthly" name="billing-period" value="monthly" checked>
+            <label for="monthly">Monthly</label>
+            <input type="radio" id="yearly" name="billing-period" value="yearly">
+            <label for="yearly">Yearly</label>
         </div>
-      </div>
+        <div class="yearly-discount">Save 20% with annual billing</div>
     </div>
-    {% endfor %}
-  </div>
 </div>
+
+<div class="container py-5">
+    <div class="row justify-content-center g-4">
+        {% for plan in plans %}
+        <div class="col-md-6 col-lg-4 price-card {% if plan.get_billing_period_display == 'Monthly' %}active{% endif %}" 
+             data-period="{{ plan.get_billing_period_display|lower }}">
+            <div class="card h-100 pricing-card {% if plan.get_name_display == 'Pro' %}most-popular{% endif %}">
+                {% if plan.get_name_display == 'Pro' %}
+                <div class="popular-badge">Most Popular</div>
+                {% endif %}
+                <div class="card-body d-flex flex-column p-4">
+                    <div class="text-center mb-4">
+                        <h3 class="mb-1">{{ plan.get_name_display }}</h3>
+                        <div class="price-amount mb-2">${{ plan.price }}</div>
+                        <div class="price-period">per {{ plan.get_billing_period_display|lower }}</div>
+                    </div>
+
+                    <ul class="feature-list mb-4">
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.pdf_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.pdf_uploads_per_month }}{% endif %} PDF uploads ({{ plan.pdf_max_pages }} pages max)</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.audio_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.audio_uploads_per_month }}{% endif %} Audio uploads ({{ plan.audio_max_length_min }}min max)</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.youtube_links_per_month >= 9999 %}Unlimited{% else %}{{ plan.youtube_links_per_month }}{% endif %} YouTube summaries</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.quizzes_per_month >= 9999 %}Unlimited{% else %}{{ plan.quizzes_per_month }}{% endif %} AI-powered quizzes</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.chatbot_messages_per_file >= 9999 %}Unlimited{% else %}{{ plan.chatbot_messages_per_file }}{% endif %} chat messages per file</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.summary_regenerations_per_file >= 999 %}Unlimited{% else %}{{ plan.summary_regenerations_per_file }}{% endif %} summary refreshes per file</span>
+                        </li>
+                    </ul>
+
+                    <button class="btn {% if plan.get_name_display == 'Pro' %}btn-gradient-primary{% else %}btn-outline-primary{% endif %} mt-auto w-100 subscribe-btn" 
+                            data-plan-id="{{ plan.paddle_plan_id }}">
+                        Get Started
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  function setupPaddleButtons() {
-    if (window.Paddle) {
-      Paddle.Environment.set('{{ paddle_sandbox|yesno:"sandbox,production" }}');
-      Paddle.Initialize({
-        token: '{{ paddle_client_token }}',
-      });
-
-      document.querySelectorAll('.subscribe-btn').forEach(function(btn) {
-        btn.addEventListener('click', async function() {
-          const planId = btn.getAttribute('data-plan-id');
-          try {
-            const checkout = await Paddle.Checkout.open({
-              items: [{
-                priceId: planId,
-                quantity: 1
-              }],
-              settings: {
-                displayMode: 'overlay',
-                theme: 'light',
-                successUrl: window.location.origin + '/subscription/success/',
-                locale: 'en'
-              },
-              customData: {
-                user_email: '{{ request.user.email }}',
-                user_id: '{{ request.user.id }}'
-              }
+    function setupPaddleButtons() {
+        if (window.Paddle) {
+            Paddle.Environment.set('{{ paddle_sandbox|yesno:"sandbox,production" }}');
+            Paddle.Initialize({
+                token: '{{ paddle_client_token }}',
             });
-            console.log('Checkout opened:', checkout);
-          } catch (error) {
-            console.error('Checkout error:', error);
-            alert('An error occurred during checkout. Please try again.');
-          }
-        });
-      });
-    } else {
-      setTimeout(setupPaddleButtons, 100);
+
+            document.querySelectorAll('.subscribe-btn').forEach(function(btn) {
+                btn.addEventListener('click', async function() {
+                    const planId = btn.getAttribute('data-plan-id');
+                    try {
+                        const checkout = await Paddle.Checkout.open({
+                            items: [{
+                                priceId: planId,
+                                quantity: 1
+                            }],
+                            settings: {
+                                displayMode: 'overlay',
+                                theme: 'light',
+                                successUrl: window.location.origin + '/subscription/success/',
+                                locale: 'en'
+                            },
+                            customData: {
+                                user_email: '{{ request.user.email }}',
+                                user_id: '{{ request.user.id }}'
+                            }
+                        });
+                        console.log('Checkout opened:', checkout);
+                    } catch (error) {
+                        console.error('Checkout error:', error);
+                        alert('An error occurred during checkout. Please try again.');
+                    }
+                });
+            });
+        } else {
+            setTimeout(setupPaddleButtons, 100);
+        }
     }
-  }
-  setupPaddleButtons();
+
+    // Monthly/Yearly toggle functionality
+    const monthlyRadio = document.getElementById('monthly');
+    const yearlyRadio = document.getElementById('yearly');
+    const priceCards = document.querySelectorAll('.price-card');
+    
+    function updatePricingDisplay(isYearly) {
+        priceCards.forEach(card => {
+            const period = card.getAttribute('data-period');
+            if ((isYearly && period === 'yearly') || (!isYearly && period === 'monthly')) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        });
+
+        document.querySelector('.yearly-discount').style.opacity = isYearly ? '1' : '0';
+    }
+
+    monthlyRadio.addEventListener('change', () => updatePricingDisplay(false));
+    yearlyRadio.addEventListener('change', () => updatePricingDisplay(true));
+
+    setupPaddleButtons();
 });
 </script>
-<style>
-  .pricing-card {
-    border-radius: 1.5rem;
-    transition: box-shadow 0.2s;
-  }
-  .pricing-card:hover {
-    box-shadow: 0 0 32px 0 rgba(0,0,0,0.12);
-  }
-  .btn-gradient-primary {
-    background: linear-gradient(90deg, #4f8cff 0%, #6f6fff 100%);
-    color: #fff;
-    border: none;
-    border-radius: 2rem;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(79,140,255,0.15);
-  }
-  .btn-gradient-primary:hover {
-    background: linear-gradient(90deg, #6f6fff 0%, #4f8cff 100%);
-    color: #fff;
-  }
-</style>
 {% endblock %}

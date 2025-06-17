@@ -433,3 +433,134 @@ body.dark-mode .large-icon {
 .nav-link.subscription-status .feather {
     color: inherit;
 }
+.pricing-header {
+    background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+    color: white;
+    padding: 4rem 0;
+    margin-bottom: 3rem;
+}
+
+.period-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    padding: 0.5rem;
+    display: inline-flex;
+    margin: 2rem 0;
+}
+
+.period-toggle label {
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    cursor: pointer;
+    color: white;
+    margin: 0;
+    transition: all 0.3s ease;
+}
+
+.period-toggle input[type="radio"] {
+    display: none;
+}
+
+.period-toggle input[type="radio"]:checked + label {
+    background: white;
+    color: #000DFF;
+}
+
+.pricing-card {
+    border-radius: 16px;
+    transition: transform 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card:hover {
+    transform: translateY(-10px);
+}
+
+.most-popular {
+    border: 2px solid #000DFF;
+    position: relative;
+}
+
+.popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000DFF;
+    color: white;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.feature-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.feature-list li {
+    padding: 0.75rem 0;
+    display: flex;
+    align-items: flex-start;
+    color: #4A5568;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.feature-list li:last-child {
+    border-bottom: none;
+}
+
+.feature-check {
+    color: #000DFF;
+    margin-right: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.feature-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.subscribe-btn {
+    border-radius: 50px;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.price-amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #2D3748;
+    line-height: 1;
+}
+
+.price-period {
+    color: #718096;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+.save-badge {
+    background: #E6FFFA;
+    color: #319795;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-left: 8px;
+    display: none;
+}
+
+.toggle-text {
+    display: inline-block;
+    padding: 0 1rem;
+    font-weight: 500;
+}
+
+.yearly-discount {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
