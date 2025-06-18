@@ -163,8 +163,6 @@ class UserSubscription(models.Model):
     def can_upload_file(self, file_type, file_size_mb=None, duration_min=None, pages=None):
         """Check if user can upload a new file based on their plan limits"""
         from django.utils import timezone
-        if not self.is_active:
-            return False, "Your subscription is not active"
 
         # Get the current month's start
         now = timezone.now()
@@ -210,8 +208,6 @@ class UserSubscription(models.Model):
     def can_generate_quiz(self, file_id):
         """Check if user can generate a new quiz"""
         from django.utils import timezone
-        if not self.is_active:
-            return False, "Your subscription is not active"
 
         # Get the current month's start
         now = timezone.now()
@@ -227,27 +223,43 @@ class UserSubscription(models.Model):
         if remaining_quizzes <= 0:
             return False, f"You've reached your monthly limit of {self.plan.quizzes_per_month} quizzes"
 
-        return True, f"OK - You have {remaining_quizzes} quizzes remaining this month"
-
+        return True, f"OK - You have {remaining_quizzes} quizzes remaining this month"    
     def can_regenerate_summary(self, file_id):
         """Check if user can regenerate a summary"""
-        if not self.is_active:
-            return False, "Your subscription is not active"
 
-        # Count summary regenerations for this file
-        summary_count = Summary.objects.filter(
+        # Get summaries for this file ordered by creation time
+        summaries = Summary.objects.filter(
             user=self.user,
             uploaded_file_id=file_id
-        ).count()
-        remaining_regenerations = self.plan.summary_regenerations_per_file - summary_count
-        if remaining_regenerations <= 0:
-            return False, f"You've reached the limit of {self.plan.summary_regenerations_per_file} summary regenerations for this file"
+        ).order_by('created_at')
 
-        return True, f"OK - You have {remaining_regenerations} summary regenerations remaining for this file"
+        if not summaries.exists():
+            return False, "No summary exists for this file yet"
+
+        # The first summary is the original, count only those after it
+        initial_summary = summaries.first()
+        regeneration_count = summaries.filter(
+            created_at__gt=initial_summary.created_at
+        ).count()
+
+        allowed_regenerations = self.plan.summary_regenerations_per_file
+        remaining = allowed_regenerations - regeneration_count
+
+        # Debug logging
+        print(f"Regeneration check for file {file_id}:")
+        print(f"- Total summaries: {summaries.count()}")
+        print(f"- Initial summary date: {initial_summary.created_at}")
+        print(f"- Regeneration count: {regeneration_count}")
+        print(f"- Allowed regenerations: {allowed_regenerations}")
+        print(f"- Remaining: {remaining}")
+
+        if remaining <= 0:
+            return False, f"You've reached the limit of {allowed_regenerations} summary regenerations for this file"
+
+        return True, f"OK - You have {remaining} summary regenerations remaining for this file"
+            
     def can_send_chat_message(self, file_id):
         """Check if user can send another chat message"""
-        if not self.is_active:
-            return False, "Your subscription is not active"
 
         # Count messages for this file
         message_count = ChatMessage.objects.filter(

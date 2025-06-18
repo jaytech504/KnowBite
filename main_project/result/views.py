@@ -37,7 +37,7 @@ generation_config = {
     "temperature": 0.7,  # Adjust creativity level
     "top_p": 0.9,
     "top_k": 50,
-    "max_output_tokens": 5000,
+    "max_output_tokens": 2500,
 }
 
 
@@ -101,8 +101,17 @@ def extract_text_from_txt(txt_path):
 
 def generate_summary_with_gemini(text, plan_type):
     """Send extracted text to Gemini API and get structured summary based on plan type."""
-
-    base_prompt = """You are an expert summarizer on educational content."""
+    
+    # Define max word limits per plan
+    word_limits = {
+        'free': 300,    # ~1-2 minute read
+        'basic': 700,   # ~2-3 minute read
+        'pro': 1000      #~3-4 minute read
+    }
+    
+    word_limit = word_limits.get(plan_type.lower(), 300)  # default to free limit
+    
+    base_prompt = f"""You are an expert summarizer on educational content. IMPORTANT: Your summary MUST NOT exceed {word_limit} words."""
     
     if plan_type.lower() == 'free':
         prompt = f"""{base_prompt}
@@ -150,7 +159,7 @@ def generate_summary_with_gemini(text, plan_type):
         """
     elif plan_type.lower() == 'pro':
         prompt = f"""{base_prompt}
-        Create a premium, comprehensive, and highly engaging summary that reads like a professional educational resource:
+        Create a premium, comprehensive, and highly engaging summary that reads like a professional educational blog post:
         
         Content Structure:
         -**Don't add table of contents**
@@ -161,10 +170,12 @@ def generate_summary_with_gemini(text, plan_type):
         - Create an in-depth yet clear conclusion
         
         Visual Elements:
-        - Create professional tables for data comparisons and analysis
+        - Create professional tables for data comparisons and analysis using html tables
         - Include advanced diagrams, graphs, and flowcharts where appropriate
         - Use LaTeX notation for mathematical formulas with professional formatting
         - Include citations and references to academic sources
+        - Include helpful notes and tips
+        - Use styling and color to make it visually appealing
         
         Advanced Formatting:
         - Professional heading hierarchy (h4, h5)
@@ -186,10 +197,31 @@ def generate_summary_with_gemini(text, plan_type):
         - Focus on essential information and main concepts
 
         Text: {text}
-        """
-
-    response = model.generate_content(prompt, generation_config=generation_config)
-    return response.text if response.text else "No summary available."
+        """    
+    try:
+        print(f"Generating summary for plan type: {plan_type}")
+        print(f"Input text length: {len(text)} characters")
+    
+        if not text or len(text.strip()) == 0:
+            print("Error: Empty input text")
+            return "Error: No text content available to summarize"
+            
+        response = model.generate_content(prompt, generation_config=generation_config)
+        
+        if not response:
+            print("Error: No response from Gemini API")
+            return "Error: Failed to generate summary - no response from AI"
+            
+        if not response.text:
+            print("Error: Empty response text from Gemini API")
+            return "Error: Failed to generate summary - empty response"
+            
+        print(f"Successfully generated summary of length: {len(response.text)}")
+        return response.text
+        
+    except Exception as e:
+        print(f"Error in generate_summary_with_gemini: {str(e)}")
+        return f"Error: Failed to generate summary - {str(e)}"
 
 # If needed, support long text by summarizing in chunks.
 def split_text(text, max_chars=3000):
@@ -219,12 +251,31 @@ def base(request, file_id):
 @login_required
 def summary_result(request, file_id):
     """Handle document summary and chat interactions"""
-    uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)    # Handle "regenerate" requests
+    uploaded_file = get_object_or_404(UploadedFile, id=file_id, user=request.user)    # Handle "regenerate" requests    
     if "regenerate" in request.GET:
         # Check regeneration limits
+        print('Start regeneration check')
         try:
             user_subscription = request.user.usersubscription
+            print(f"User Plan: {user_subscription.plan.name}")
+            print(f"Plan regenerations allowed: {user_subscription.plan.summary_regenerations_per_file}")
+            
+            # Get all summaries for this file
+            summaries = Summary.objects.filter(
+                user=request.user,
+                uploaded_file_id=file_id
+            ).order_by('created_at')
+            print(f"Total summaries for this file: {summaries.count()}")
+            
+            if summaries.exists():
+                initial_summary = summaries.first()
+                regenerations = summaries.filter(created_at__gt=initial_summary.created_at).count()
+                print(f"Number of regenerations: {regenerations}")
+            
             can_regenerate, message = user_subscription.can_regenerate_summary(file_id)
+            print(f"Can regenerate: {can_regenerate}")
+            print(f"Message: {message}")
+            
             if not can_regenerate:
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({'error': message}, status=403)
@@ -234,19 +285,37 @@ def summary_result(request, file_id):
             messages.error(request, "Error checking subscription limits")
             return redirect('summary', file_id=file_id)
 
-        try:            
+        try:     
+            print('start')       
             summary = generate_or_retrieve_summary(request, uploaded_file)
+            print('done')
+            
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                if isinstance(summary, str) and summary.startswith('Error'):
+                    # If we got an error string back
+                    print(f"Error during summary generation: {summary}")
+                    return JsonResponse({'error': summary}, status=500)
+                    
                 return JsonResponse({
                     'summary': summary,
                     'success': True,
                     'timestamp': time.time()
                 })
-            return redirect('summary', file_id=file_id)
+                
+            return render(request, 'result/summary.html', {
+                'summary': summary,
+                'file': uploaded_file,
+                'chat_history': []  # Reset chat history for regenerated summary
+            })
+            
         except Exception as e:
+            print(f"Error during summary regeneration: {str(e)}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'error': str(e)}, status=500)
-            raise  # Rethrow so you see error in dev mode
+                return JsonResponse({
+                    'error': f"Failed to regenerate summary: {str(e)}"
+                }, status=500)
+            messages.error(request, f"Failed to regenerate summary: {str(e)}")
+            return redirect('summary', file_id=file_id)
 
     # Handle normal page load
     summary_instance = Summary.objects.filter(user=request.user, uploaded_file=uploaded_file).first()
@@ -294,6 +363,7 @@ def generate_or_retrieve_summary(request, uploaded_file):
 
     if extracted_text_instance is not None:
         extracted_text = extracted_text_instance.extracted_text
+        print(extracted_text)
     else:
         try:
             # Text extraction step
@@ -330,21 +400,52 @@ def generate_or_retrieve_summary(request, uploaded_file):
         # Get user's plan type
         try:
             user_subscription = user.usersubscription
-            if user_subscription.is_active:
-                plan_type = user_subscription.plan.name
+            plan_type = user_subscription.plan.name
+            print(f"User plan type: {plan_type}")
         except Exception as e:
-            print(f"Error getting plan type: {e}")
-
-        if len(extracted_text) > 3000:
-            # For long texts, process chunks with the same plan type
-            chunks = split_text(extracted_text, max_chars=3000)
+            print(f"Error getting plan type: {e}")          # Define chunk size based on plan type
+        chunk_sizes = {
+            'free': 2000,
+            'basic': 2500,
+            'pro': 3000
+        }
+        chunk_size = chunk_sizes.get(plan_type.lower(), 2000)
+        
+        if len(extracted_text) > chunk_size:
+            print(f"Text length {len(extracted_text)} exceeds {chunk_size} chars, splitting into chunks")
+            chunks = split_text(extracted_text, max_chars=chunk_size)
             chunk_summaries = []
-            for chunk in chunks:
+            
+            # Calculate word limit per chunk based on total chunks
+            word_limits = {
+                'free': 300,
+                'basic': 700,
+                'pro': 1000
+            }
+            total_word_limit = word_limits.get(plan_type.lower(), 300)
+            chunk_word_limit = total_word_limit // len(chunks)
+            
+            for i, chunk in enumerate(chunks, 1):
+                print(f"Processing chunk {i} of {len(chunks)}")
                 summary_chunk = generate_summary_with_gemini(chunk, plan_type)
+                
+                if summary_chunk.startswith('Error:'):
+                    print(f"Error in chunk {i}: {summary_chunk}")
+                    return summary_chunk
+                    
                 chunk_summaries.append(summary_chunk)
                 time.sleep(1)  # Delay to avoid rate limits
-            combined_text = " ".join(chunk_summaries)
-            summary = generate_summary_with_gemini(combined_text, plan_type)
+            
+            print(f"Generated {len(chunk_summaries)} chunk summaries")
+            
+            chunk_summaries = ' '.join(chunk_summaries)
+            combined_summary = generate_summary_with_gemini(chunk_summaries, plan_type)
+                
+            if combined_summary.startswith('Error:'):
+                print(f"Error combining summaries: {combined_summary}")
+                return combined_summary
+                
+            summary = combined_summary
         else:
             summary = generate_summary_with_gemini(extracted_text, plan_type)
     except Exception as e:
