@@ -16,14 +16,7 @@
             
             <div class="info-row">
                 <div>Current Pricing Plan</div>
-                <div class="descrip">Starter Plan</div>
-            </div>
-            
-            <div class="info-row">
-                <div>Dark Mode</div>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="dark-mode-toggle" {% if request.session.dark_mode %}checked{% endif %}>
-                </div>
+                <div class="descrip">{{ user_plan.plan.name }}</div>
             </div>
             
             <a class="btn btn-primary w-100 btn-billing" href="{% url 'pricing' %}">

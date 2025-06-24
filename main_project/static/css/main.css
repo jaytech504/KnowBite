@@ -434,7 +434,7 @@ body.dark-mode .large-icon {
     color: inherit;
 }
 .pricing-header {
-    background: linear-gradient(135deg, #6B73FF 0%, #000DFF 100%);
+    background: linear-gradient(135deg, #6B73FF 0%, #0d6efd 100%);
     color: white;
     padding: 4rem 0;
     margin-bottom: 3rem;
@@ -463,7 +463,7 @@ body.dark-mode .large-icon {
 
 .period-toggle input[type="radio"]:checked + label {
     background: white;
-    color: #000DFF;
+    color: #0d6efd;
 }
 
 .pricing-card {
@@ -487,7 +487,7 @@ body.dark-mode .large-icon {
     top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    background: #000DFF;
+    background: #0d6efd;
     color: white;
     padding: 4px 16px;
     border-radius: 20px;
@@ -513,7 +513,7 @@ body.dark-mode .large-icon {
 }
 
 .feature-check {
-    color: #000DFF;
+    color: #0d6efd;
     margin-right: 0.75rem;
     margin-top: 0.25rem;
 }

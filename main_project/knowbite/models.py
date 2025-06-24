@@ -199,11 +199,10 @@ class UserSubscription(models.Model):
                 return False, f"You've reached your monthly limit of {self.plan.youtube_links_per_month} YouTube links"            
             if duration_min and duration_min > self.plan.youtube_max_length_min:
                 return False, f"Video must be {self.plan.youtube_max_length_min} minutes or less (current: {round(duration_min, 1)} minutes)"
-
+        print("OK - You have uploads remaining this month", remaining_uploads, file_type)
         # Add a more informative success message with remaining uploads
         return True, f"OK - You have {remaining_uploads} {file_type} uploads remaining this month"
 
-        return True, "OK"
 
     def can_generate_quiz(self, file_id):
         """Check if user can generate a new quiz"""

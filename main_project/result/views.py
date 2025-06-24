@@ -37,7 +37,7 @@ generation_config = {
     "temperature": 0.7,  # Adjust creativity level
     "top_p": 0.9,
     "top_k": 50,
-    "max_output_tokens": 2500,
+    "max_output_tokens": 8000,
 }
 
 
@@ -101,107 +101,94 @@ def extract_text_from_txt(txt_path):
 
 def generate_summary_with_gemini(text, plan_type):
     """Send extracted text to Gemini API and get structured summary based on plan type."""
-    
-    # Define max word limits per plan
-    word_limits = {
-        'free': 300,    # ~1-2 minute read
-        'basic': 700,   # ~2-3 minute read
-        'pro': 1000      #~3-4 minute read
-    }
-    
-    word_limit = word_limits.get(plan_type.lower(), 300)  # default to free limit
-    
-    base_prompt = f"""You are an expert summarizer on educational content. IMPORTANT: Your summary MUST NOT exceed {word_limit} words."""
-    
+
+    base_prompt = f"""
+You are an expert educational blogger and content designer. Your job is to turn the following text into a beautifully formatted, engaging blog post summary that will be rendered within a <div> container on a modern website.
+
+IMPORTANT FORMATTING RULES:
+- Do NOT include a table of contents or any list of sections.
+- All output must be valid HTML that renders beautifully (do NOT use <html>, <body>, or <head> tags).
+- **Do not put the output in a div**
+- Add style tag with css classes for the summary
+- **Do not set a background color**
+- Do not set a font family
+- Start section headers with colored <h4> (<h1>, <h2>, or <h3>) and relevant emojis in headers.
+- Use semantic HTML5 tags and CSS classes that work with standard blog styling.
+- Use short paragraphs, lots of white space, and clear visual separation between sections.
+- Use modern, attractive formatting and layout throughout, like top-tier blogs (Medium, Notion, Substack).
+- Use css styled <table> for comparisons or data, <blockquote> and <div class='pro-tip'> for callouts, and <mark>, <b>, <i>, <u>, <code>, <span class='highlight'> for emphasis.
+- All HTML elements must be properly nested and closed.
+- Use $...$ for inline math and formulas (LaTeX style).
+"""
+
+
     if plan_type.lower() == 'free':
         prompt = f"""{base_prompt}
-        Create a clear and concise summary of the following text with:
-        - Use emojis for section headers to make it engaging 📚
-        - Format with clear **section headers** (like 📋 Introduction, 🎯 Key Points, 🎬 Conclusion) in <h4> tags
-        - Use bullet points for key information
-        - Keep it concise but informative
-        - When there are mathematical formulas, use LaTeX notation ($formula$)
-          Example: 'y equals x squared' becomes '$y = x^2$'
-        - Use simple tables for important comparisons only
-        - Focus on essential information and main concepts
-        - Keep sections brief and to the point
-        - Keep summary under 500 words
-        Text: {text}
-        """    
+- Do not exceed 750 words
+- Use emojis for section headers to make it engaging 📚
+- Format with clear section headers (like 📋 Introduction, 🎯 Key Points, 🎬 Conclusion) in <h4> tags
+- Use bullet points for key information
+- Keep it concise but informative
+- When there are mathematical formulas, use LaTeX notation ($formula$)
+- Use simple tables for important comparisons only
+- Focus on essential information and main concepts
+- Keep sections brief and to the point
+Text: {text}
+"""
     elif plan_type.lower() == 'basic':
         prompt = f"""{base_prompt}
-        Create an enhanced and visually engaging summary that reads like a blog post:
-        
-        Content Structure:
-        -**Don't include table of contents**
-        - Start with an engaging introduction
-        - Use professional section headers with themed emojis in <h4> tags
-        - Break down concepts into clear sections
-        - Include practical examples where relevant
-        - Add a comprehensive conclusion
-        
-        Visual Elements:
-        - Create clean tables for data comparisons
-        - Add basic diagrams where helpful
-        - Use LaTeX notation for mathematical formulas ($formula$)
-        
-        Enhanced Features:
-        - Include helpful notes and tips
-        - Use clear formatting for better readability
-        - Add basic cross-references between concepts
-
-        Formatting:
-        - Consistent heading hierarchy (h4, h5)
-        - Professional equation formatting
-        - Clean and organized layout
-
-        Text: {text}
-        """
+- Make the summary at least 1000 - 1500 words
+- Make it elaborate
+- Start with a captivating introduction in a <h4> tag, using a relevant emoji
+- Use stylish, modern section headers in <h4> tags with relevant emojis for each section
+- Break down concepts into clear, well-structured sections with short paragraphs
+- Use bullet points, numbered lists, and callout boxes for key ideas
+- Add at least one <table> for comparisons, frameworks, or data (make it visually appealing and easy to read)
+- Highlight practical examples and real-world applications
+- Include 2 example of step by step solution if it contains any mathematical or programming content.
+- Include at least one 'Pro Tip' or 'Did You Know?' callout in a <blockquote> or <div class='pro-tip'> with a distinct style
+- Use <b>, <i>, <u>, and <mark> for emphasis and highlights
+- Add a visually distinct conclusion in a <h4> tag with an emoji
+- Use $...$ for inline math and formulas
+- Make the layout look like a popular, beautiful blog (think Medium, Notion, or Substack)
+- Use short paragraphs and lots of white space for readability
+Text: {text}
+"""
     elif plan_type.lower() == 'pro':
         prompt = f"""{base_prompt}
-        Create a premium, comprehensive, and highly engaging summary that reads like a professional educational blog post:
-        
-        Content Structure:
-        -**Don't add table of contents**
-        - Begin with a compelling hook and overview
-        - Use professional section headers with carefully chosen emojis in <h4> tags
-        - Break down complex concepts into digestible sections
-        - Include detailed examples and real-world applications
-        - Create an in-depth yet clear conclusion
-        
-        Visual Elements:
-        - Create professional tables for data comparisons and analysis using html tables
-        - Include advanced diagrams, graphs, and flowcharts where appropriate
-        - Use LaTeX notation for mathematical formulas with professional formatting
-        - Include citations and references to academic sources
-        - Include helpful notes and tips
-        - Use styling and color to make it visually appealing
-        
-        Advanced Formatting:
-        - Professional heading hierarchy (h4, h5)
-        - Syntax-highlighted code snippets where relevant
-        - Publication-quality equation formatting
-        - Clean, professional layout with consistent styling
-        - Interactive elements for enhanced learning
-
-        Text: {text}
-        """
+- Make the summary at least a 1500 - 3000 words
+- Make it elaborate and verbose
+- Begin with a compelling hook and overview in a <h4> tag, using a carefully chosen emoji
+- Use professional, modern section headers in <h4> tags with unique, relevant emojis for each section
+- Break down complex concepts into digestible, visually separated sections with short paragraphs and clear subheadings
+- **Always** Use <table> for data, comparisons, or frameworks (at least one, make sure it is styled for clarity and visual appeal)
+- Include graphs, diagrams or any other visual element where necessary
+- Add advanced formatting: <blockquote>, <div class='pro-tip'>, <mark>, <b>, <i>, <u>, <code> for code snippets, and <span class='highlight'> for key points
+- Always include at least one 'Pro Tip', 'Expert Insight', or 'Did You Know?' in a callout box with a distinct style
+- Use bullet points, numbered lists, and callouts for clarity and engagement
+- Add practical examples, real-world applications, and actionable advice in visually distinct boxes or highlights
+- Use $...$ for inline math and highlight important equations
+- Include at least **1-2 example** of step by step solution if it contains any mathematical or programming content.
+- End with a strong, visually distinct conclusion in a <h4> tag with an emoji
+- Make the layout look like a top-tier, beautiful blog (think Medium, Notion, Substack, or top SaaS blogs)
+- Use short paragraphs, white space, and modern web style for maximum readability
+Text: {text}
+"""
     else:  # Fallback to free plan if unknown type
         prompt = f"""{base_prompt}
-        Create a clear and concise summary of the following text with:
-        - Use emojis for section headers to make it engaging 📚
-        - Format with clear **section headers** in <h4> tags
-        - Use bullet points for key information
-        - Keep it concise but informative
-        - When there are mathematical formulas, use LaTeX notation ($formula$)
-        - Focus on essential information and main concepts
+- Use emojis for section headers to make it engaging 📚
+- Format with clear section headers in <h4> tags
+- Use bullet points for key information
+- Keep it concise but informative
+- When there are mathematical formulas, use LaTeX notation ($formula$)
+- Focus on essential information and main concepts
+Text: {text}
+"""
 
-        Text: {text}
-        """    
     try:
         print(f"Generating summary for plan type: {plan_type}")
         print(f"Input text length: {len(text)} characters")
-    
+        
         if not text or len(text.strip()) == 0:
             print("Error: Empty input text")
             return "Error: No text content available to summarize"
@@ -363,7 +350,6 @@ def generate_or_retrieve_summary(request, uploaded_file):
 
     if extracted_text_instance is not None:
         extracted_text = extracted_text_instance.extracted_text
-        print(extracted_text)
     else:
         try:
             # Text extraction step

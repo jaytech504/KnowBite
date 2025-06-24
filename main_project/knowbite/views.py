@@ -154,17 +154,11 @@ def yournotes(request, file_id=None):
     }
     return render(request, 'knowbite/yournotes.html', context)
 
-@require_POST
-@csrf_exempt
-def toggle_dark_mode(request):
-    dark_mode = request.COOKIES.get('dark_mode', 'false') == 'true'
-    dark_mode = not dark_mode
-    response = JsonResponse({'success': True})
-    response.set_cookie('dark_mode', str(dark_mode).lower(), max_age=30*24*60*60)
-    return response
 @login_required
 def settings(request):
+    user_plan = request.user.usersubscription
     context = {
-        'title': 'Settings'
+        'title': 'Settings',
+        'user_plan': user_plan
     }
     return render(request, 'knowbite/settings.html', context)

@@ -589,7 +589,7 @@ body.dark-mode .large-icon {
 }
 
 .chat-input button, .chat-input-chat button {
-    background-color: #007bff; /* Primary blue color */
+    background-color: #0d6efd; /* Primary blue color */
     color: #fff;
     border: none;
     padding: 12px 20px;
@@ -613,7 +613,7 @@ body.dark-mode .large-icon {
 .mobile-nav button {
     padding: 10px 20px;
     border: none;
-    background-color: #007bff;
+    background-color: #0d6efd;
     color: #fff;
     border-radius: 25px;
     cursor: pointer;
@@ -803,7 +803,7 @@ body.dark-mode .large-icon {
 
 .custom-select select:focus {
     outline: none;
-    border-color: #4299e1;
+    border-color: #0d6efd;
     box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
 }
 
@@ -868,7 +868,7 @@ body.dark-mode .large-icon {
 }
 
 .slider-label.active {
-    color: #4299e1;
+    color: #0d6efd;
     background-color: #ebf8ff;
     font-weight: 600;
 }
@@ -880,7 +880,7 @@ body.dark-mode .large-icon {
     justify-content: center;
     gap: 10px;
     padding: 14px 24px;
-    background-color: #4299e1;
+    background-color: #0d6efd;
     color: white;
     border: none;
     border-radius: 8px;
@@ -950,7 +950,7 @@ body.dark-mode .large-icon {
 
 .progress-bar {
     height: 100%;
-    background-color: #4299e1;
+    background-color: #0d6efd;
     border-radius: 10px;
     transition: width 0.3s ease;
 }
@@ -1043,7 +1043,7 @@ body.dark-mode .large-icon {
 
 .option input:checked ~ .option-content {
     background-color: #ebf8ff;
-    border-color: #4299e1;
+    border-color: #0d6efd;
 }
 
 .option-letter {
@@ -1062,7 +1062,7 @@ body.dark-mode .large-icon {
 }
 
 .option input:checked ~ .option-content .option-letter {
-    background-color: #4299e1;
+    background-color: #0d6efd;
     color: white;
 }
 
@@ -1078,7 +1078,7 @@ body.dark-mode .large-icon {
     justify-content: center;
     gap: 10px;
     padding: 14px 28px;
-    background-color: #4299e1;
+    background-color: #0d6efd;
     color: white;
     border: none;
     border-radius: 8px;
@@ -1252,7 +1252,7 @@ body.dark-mode .large-icon {
 }
 
 .summary-item.total .summary-count {
-    color: #4299e1;
+    color: #0d6efd;
 }
 
 .summary-label {
@@ -1397,7 +1397,7 @@ body.dark-mode .large-icon {
     justify-content: center;
     gap: 10px;
     padding: 14px 28px;
-    background-color: #4299e1;
+    background-color: #0d6efd;
     color: white;
     border: none;
     border-radius: 8px;

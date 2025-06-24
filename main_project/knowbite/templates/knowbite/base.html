@@ -167,32 +167,6 @@
             window.addEventListener('resize', adjustContentPadding);
         });
     </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const darkMode = document.cookie.split('; ').find(row => row.startsWith('dark_mode='));
-            if (darkMode && darkMode.split('=')[1] === 'true') {
-                document.body.classList.add('dark-mode');
-                document.getElementById('dark-mode-toggle').checked = true;
-            }
-        })
-
-        document.getElementById('dark-mode-toggle').addEventListener('change', function() {
-            fetch("{% url 'toggle_dark_mode' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({})
-            }).then(response => response.json())
-              .then(data => {
-                if (data.success) {
-                    document.body.classList.toggle('dark-mode');
-                    location.reload();
-                }
-              });
-        });
-    </script>
 
 </body>
 </html>
