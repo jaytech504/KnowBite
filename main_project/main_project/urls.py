@@ -33,7 +33,7 @@ urlpatterns = [
     path("quiz/<int:file_id>/display/", result_views.submit_quiz, name="submit_quiz"),
     path("chatbot/<int:file_id>/", result_views.chatbot, name='chatbot'),
     path("transcript/<int:file_id>/", result_views.transcripts, name='transcripts'),
-
+    path('accounts/', include('allauth.urls')),
 ] 
 
 if settings.DEBUG:
