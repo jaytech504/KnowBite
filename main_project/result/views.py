@@ -143,6 +143,7 @@ Text: {text}
 - Use stylish, modern section headers in <h4> tags with relevant emojis for each section
 - Break down concepts into clear, well-structured sections with short paragraphs
 - Use bullet points, numbered lists, and callout boxes for key ideas
+- design diagrams for categories, process or flowchart where and if necessary
 - Add at least one <table> for comparisons, frameworks, or data (make it visually appealing and easy to read)
 - Highlight practical examples and real-world applications
 - Include 2 example of step by step solution if it contains any mathematical or programming content.
@@ -162,7 +163,7 @@ Text: {text}
 - Use professional, modern section headers in <h4> tags with unique, relevant emojis for each section
 - Break down complex concepts into digestible, visually separated sections with short paragraphs and clear subheadings
 - **Always** Use <table> for data, comparisons, or frameworks (at least one, make sure it is styled for clarity and visual appeal)
-- Include graphs, diagrams or any other visual element where necessary
+- Include graphs, diagrams, flowchart or any other visual element where necessary
 - Add advanced formatting: <blockquote>, <div class='pro-tip'>, <mark>, <b>, <i>, <u>, <code> for code snippets, and <span class='highlight'> for key points
 - Always include at least one 'Pro Tip', 'Expert Insight', or 'Did You Know?' in a callout box with a distinct style
 - Use bullet points, numbered lists, and callouts for clarity and engagement
@@ -390,13 +391,8 @@ def generate_or_retrieve_summary(request, uploaded_file):
             print(f"User plan type: {plan_type}")
         except Exception as e:
             print(f"Error getting plan type: {e}")          # Define chunk size based on plan type
-        chunk_sizes = {
-            'free': 2000,
-            'basic': 2500,
-            'pro': 3000
-        }
-        chunk_size = chunk_sizes.get(plan_type.lower(), 2000)
-        
+       
+        chunk_size = 3500
         if len(extracted_text) > chunk_size:
             print(f"Text length {len(extracted_text)} exceeds {chunk_size} chars, splitting into chunks")
             chunks = split_text(extracted_text, max_chars=chunk_size)

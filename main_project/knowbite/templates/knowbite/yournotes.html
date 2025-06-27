@@ -42,7 +42,7 @@
                     <a href="{% url 'summary' file.id %}" class="content-card">
                             <i class="bi bi-camera-video card-icon"></i>
                             <div>
-                                <h5 class="mb-1">{{ file.youtube_link }}</h5>
+                                <h5 class="mb-1">{{ file.filenameh }}</h5>
                                 <div class="date">{{ file.uploaded_at }}</div>
                             </div>
                             <form method="POST" action="{% url 'delete_file' file.id %}" style="display: inline;">

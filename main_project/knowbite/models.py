@@ -15,16 +15,17 @@ class UploadedFile(models.Model):
     file = models.FileField(upload_to='uploads/', blank=True, null=True)
     file_type = models.CharField(max_length=10, choices=FILE_TYPES)
     youtube_link = models.URLField(blank=True, null=True)
+    title = models.CharField(max_length=512, blank=True, null=True)  # New field for YouTube title
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         if self.file_type == 'youtube':
-            return f"YouTube: {self.youtube_link}"
+            return f"YouTube: {self.title or self.youtube_link}"
         return os.path.basename(self.file.name) if self.file else "No file"
 
     def filename(self):
         if self.file_type == 'youtube':
-            return self.youtube_link
+            return self.title or self.youtube_link
         return os.path.basename(self.file.name) if self.file else None
 
     def save(self, *args, **kwargs):

@@ -52,6 +52,7 @@ def upload_file(request):
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(youtube_link, download=False)
                     duration_min = info.get('duration', 0) / 60  # Convert seconds to minutes
+                    title = info.get('title', 'Unknown Title')  # Get video title or fallback to URL
                     print(duration_min)
                     can_upload, message = user_subscription.can_upload_file('youtube', duration_min=duration_min)
                     if not can_upload:
@@ -66,7 +67,8 @@ def upload_file(request):
                     user=request.user,
                     file_type='youtube',
                     youtube_link=youtube_link,
-                    file=None
+                    file=None,
+                    title=title
                 )
                 messages.success(request, "YouTube link saved successfully")
                 return redirect('summary', file_id=uploaded_file.id)
