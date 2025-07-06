@@ -34,6 +34,8 @@ urlpatterns = [
     path("chatbot/<int:file_id>/", result_views.chatbot, name='chatbot'),
     path("transcript/<int:file_id>/", result_views.transcripts, name='transcripts'),
     path('accounts/', include('allauth.urls')),
+    path('terms_of_service/', users_views.terms_of_service, name='terms'),
+    path('privacy_policy', users_views.privacy_policy, name='privacy')
 ] 
 
 if settings.DEBUG:

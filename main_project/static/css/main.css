@@ -436,8 +436,8 @@ body.dark-mode .large-icon {
 .pricing-header {
     background: linear-gradient(135deg, #6B73FF 0%, #0d6efd 100%);
     color: white;
-    padding: 4rem 0;
-    margin-bottom: 3rem;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
 }
 
 .period-toggle {

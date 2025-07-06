@@ -40,9 +40,9 @@
                     {% endif %}
                     {% elif file.youtube_link %}
                     <a href="{% url 'summary' file.id %}" class="content-card">
-                            <i class="bi bi-camera-video card-icon"></i>
+                            <i class="bi bi-youtube card-icon" style="color: #ff0000;"></i>
                             <div>
-                                <h5 class="mb-1">{{ file.filenameh }}</h5>
+                                <h5 class="mb-1">{{ file.filename }}</h5>
                                 <div class="date">{{ file.uploaded_at }}</div>
                             </div>
                             <form method="POST" action="{% url 'delete_file' file.id %}" style="display: inline;">

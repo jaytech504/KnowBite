@@ -53,7 +53,13 @@ class ExtractedText(models.Model):
 
     def __str__(self):
         return f"Extracted text for {self.uploaded_file.filename()} by {self.user.username}"
+class Quiz(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    file = models.ForeignKey('UploadedFile', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return f"{self.file.filename()} by {self.user.username} Quizzes"
 class ChatMessage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.ForeignKey('UploadedFile', on_delete=models.CASCADE)
@@ -214,7 +220,6 @@ class UserSubscription(models.Model):
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         
         # Count quizzes this month
-        from result.models import Quiz  # Import here to avoid circular import
         monthly_quizzes = Quiz.objects.filter(
             user=self.user,
             created_at__gte=month_start
@@ -267,6 +272,7 @@ class UserSubscription(models.Model):
             file_id=file_id
         ).count()        
         remaining_messages = self.plan.chatbot_messages_per_file - message_count
+        print(remaining_messages)
         if remaining_messages <= 0:
             return False, f"You've reached the limit of {self.plan.chatbot_messages_per_file} messages for this file"
 

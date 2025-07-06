@@ -37,10 +37,14 @@ class UserRegisterForm(UserCreationForm):
                 'placeholder': 'Confirm Password'
             })
     )
+
+    terms = forms.BooleanField(
+            required=True, 
+            label="I agree to the Terms of Service and Privacy Policy")
   
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ['username', 'email', 'password1', 'password2', 'terms']
 
     def clean_email(self):
         # Ensure email is unique

@@ -1,7 +1,6 @@
 {% extends "knowbite/base.html" %}
 {% block content %}
 <style>
-/* ...existing styles... */
 .price-card {
     display: none;
 }
@@ -12,7 +11,7 @@
 </style>
 
 <div class="pricing-header text-center">
-    <h1 class="display-4 mb-3">Simple, Transparent Pricing</h1>
+    <h5 class="display-5 mb-3">Simple, Transparent Pricing</h5>
     <p class="lead mb-4">Choose the perfect plan for your learning needs</p>
     
     <div class="period-toggle-container">
@@ -45,11 +44,15 @@
                     <ul class="feature-list mb-4">
                         <li>
                             <span class="feature-check">✓</span>
-                            <span class="feature-text">{% if plan.pdf_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.pdf_uploads_per_month }}{% endif %} PDF uploads ({{ plan.pdf_max_pages }} pages max)</span>
+                            <span class="feature-text">Premium styled Summaries</span>
                         </li>
                         <li>
                             <span class="feature-check">✓</span>
-                            <span class="feature-text">{% if plan.audio_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.audio_uploads_per_month }}{% endif %} Audio uploads ({{ plan.audio_max_length_min }}min max)</span>
+                            <span class="feature-text">{% if plan.pdf_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.pdf_uploads_per_month }}{% endif %} PDF uploads</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.audio_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.audio_uploads_per_month }}{% endif %} Audio uploads</span>
                         </li>
                         <li>
                             <span class="feature-check">✓</span>
@@ -61,15 +64,11 @@
                         </li>
                         <li>
                             <span class="feature-check">✓</span>
-                            <span class="feature-text">{% if plan.chatbot_messages_per_file >= 9999 %}Unlimited{% else %}{{ plan.chatbot_messages_per_file }}{% endif %} chat messages per file</span>
-                        </li>
-                        <li>
-                            <span class="feature-check">✓</span>
-                            <span class="feature-text">{% if plan.summary_regenerations_per_file >= 999 %}Unlimited{% else %}{{ plan.summary_regenerations_per_file }}{% endif %} summary refreshes per file</span>
+                            <span class="feature-text">{% if plan.chatbot_messages_per_file >= 9999 %}Unlimited{% else %}{{ plan.chatbot_messages_per_file }}{% endif %} chatbot messages per file</span>
                         </li>
                     </ul>
 
-                    <button class="btn {% if plan.get_name_display == 'Pro' %}btn-gradient-primary{% else %}btn-outline-primary{% endif %} mt-auto w-100 subscribe-btn" 
+                    <button class="btn btn-outline-primary mt-auto w-100 subscribe-btn" 
                             data-plan-id="{{ plan.paddle_plan_id }}">
                         Get Started
                     </button>

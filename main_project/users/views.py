@@ -36,4 +36,12 @@ def logout_view(request):
     messages.success(request, "Logged out successfully.")
     return redirect("landing_page")
 
+def terms_of_service(request):
+
+    return render(request, 'users/terms_of_service.html')
+
+def privacy_policy(request):
+
+    return render(request, 'users/privacy_policy.html')
+
     

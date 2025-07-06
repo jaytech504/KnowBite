@@ -1,0 +1,307 @@
+/* Modern Landing Page Styles */
+:root {
+    --primary-color: #0066cc;
+    --text-color: #1d1d1f;
+    --secondary-text: #86868b;
+    --section-gap: 120px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+    color: var(--text-color);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+.navbar {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 1rem 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.hero-section {
+    padding: 180px 0 100px;
+    background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: 4.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--text-color) 0%, #434343 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    color: var(--secondary-text);
+    margin-bottom: 2.5rem;
+}
+
+.features-section {
+    padding: var(--section-gap) 0;
+}
+
+.feature-card {
+    padding: 2.5rem;
+    border: none;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    background: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color) 0%, #0095ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    border: none;
+    padding: 0.7rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 102, 204, 0.2);
+    background: #0077ed;
+}
+
+.btn-outline {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+}
+
+.btn-outline:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.demo-section {
+    background: #f5f5f7;
+    padding: var(--section-gap) 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.demo-image {
+    border-radius: 30px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+}
+
+.support-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    height: 100%;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+.cta-section {
+    padding: var(--section-gap) 0;
+    background: linear-gradient(135deg, #f5f5f7 0%, #ffffff 100%);
+    text-align: center;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 3rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.25rem;
+    }
+    
+    .feature-card {
+        padding: 1.5rem;
+    }
+}
+
+/* Animations */
+.fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease forwards;
+}
+
+@keyframes fadeUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stagger-fade > * {
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+}
+
+.stagger-fade > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-fade > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-fade > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-fade > *:nth-child(4) { animation-delay: 0.4s; }
+.stagger-fade > *:nth-child(5) { animation-delay: 0.5s; }
+.stagger-fade > *:nth-child(6) { animation-delay: 0.6s; }
+
+.logo {
+    width: 100px;
+    height: 50px
+}
+
+.gradient-header {
+    background: linear-gradient(180deg, #0077ed 0%, #60a5fa 50%, #fff 100%);
+    padding: 120px 0 80px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.gradient-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.10) 0%, transparent 60%),
+                radial-gradient(circle at 20% 80%, rgba(96,165,250,0.18) 0%, transparent 70%);
+    z-index: 1;
+}
+
+.gradient-header .container {
+    position: relative;
+    z-index: 2;
+}
+
+.gradient-header h1,
+.gradient-header .display-4 {
+    color: #fff;
+    text-shadow: 0 2px 16px rgba(10,37,64,0.12);
+}
+
+.gradient-header p {
+    color: rgba(255,255,255,0.85);
+}
+
+.gradient-header .btn-primary,
+.gradient-header .btn-outline-primary {
+    box-shadow: 0 4px 24px rgba(37,99,235,0.12);
+}
+
+.gradient-header .btn-primary:hover {
+    background: #2563eb;
+    color: #fff;
+}
+
+.gradient-header .btn-outline-primary:hover {
+    background: #fff;
+    color: #2563eb;
+    border-color: #fff;
+}
+
+.feature-card {
+    border: none;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    transition: all 0.3s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.feature {
+    height: 50px;
+    width: 50px;
+}
+.feather {
+    color: #0077ed
+}
+
+.testimonial-section {
+    background: #f8fafc;
+    padding: 80px 0;
+}
+
+.testimonial-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin: 1rem;
+    transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.testimonial-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-bottom: 1rem;
+}
+
+.testimonial-quote {
+    color: #64748b;
+    font-style: italic;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.testimonial-author {
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.25rem;
+}
+
+.testimonial-role {
+    color: #64748b;
+    font-size: 0.875rem;
+}

@@ -21,7 +21,7 @@ import json
 
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
-from knowbite.models import UploadedFile, Summary, ChatMessage, ExtractedText
+from knowbite.models import UploadedFile, Summary, ChatMessage, ExtractedText, Quiz
 from transformers import AutoTokenizer
 from django.utils.safestring import mark_safe
 import google.generativeai as genai
@@ -42,16 +42,14 @@ generation_config = {
 
 
 SYSTEM_BASE = """You are a helpful teacher assisting students. Follow these rules:
-1. Answer based on the document summary and chat history
+1. Answer using document summary and chat history as context but also add necessary related information if needed.
 2. Format math with LaTeX: $inline$ and $$display$$
-3. Add relevant extra knowledge when helpful
-4. Keep answers under 150 words
+3. Explain concepts in easy to understand terms and use relevant extra knowledge when helpful
+4. Keep some answers under 150 words unless necessary then up to 500 words.
 5. Be friendly and use occasional emojis
 6. If question is unrelated, politely decline
 Current Document Summary: {summary}"""
-# -------------------------------------------------------------------
-# Helper Functions: Text Extraction using PyMuPDF
-# -------------------------------------------------------------------
+
 
 def extract_text_from_pdf(pdf_path):
     """Extract text from a PDF using PyMuPDF (fitz)."""
@@ -593,9 +591,11 @@ def take_quiz(request, file_id):
         user_subscription = request.user.usersubscription
         can_generate, message = user_subscription.can_generate_quiz(file_id)
         if not can_generate:
+            print('Cannot generate quiz')
             messages.error(request, message)
             return redirect('quiz_options', file_id=file_id)
     except Exception as e:
+        print('Got error')
         messages.error(request, "Error checking quiz limits")
         return redirect('quiz_options', file_id=file_id)
     
@@ -616,6 +616,8 @@ def take_quiz(request, file_id):
     mcq_text = generate_mcqs_with_gemini(summary_instance.summary_text, num_questions, difficulty)
     mcqs = parse_mcq_response(mcq_text)
     random.shuffle(mcqs)
+
+    Quiz.objects.create(user=request.user, file=uploaded_file)
 
     request.session['mcqs'] = mcqs  # Store MCQs in session for later use
 
