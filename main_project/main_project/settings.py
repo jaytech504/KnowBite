@@ -17,6 +17,7 @@ load_dotenv()
 
 import os
 import certifi
+import shutil
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
 
@@ -55,6 +56,8 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'markdownify',
     'sendgrid',
+    'tailwind',
+    'theme',
     # Allauth for social login
     'django.contrib.sites',
     'allauth',
@@ -115,7 +118,8 @@ CSP_HEADER = {
         "https://cdn.paddle.com",
         "https://code.jquery.com",
         "https://cdn.jsdelivr.net",
-        "https://stackpath.bootstrapcdn.com"
+        "https://stackpath.bootstrapcdn.com",
+        "https://cdn.tailwindcss.com"
     ],    'style-src': [
         "'self'",
         "'unsafe-inline'",
@@ -123,7 +127,8 @@ CSP_HEADER = {
         "https://cdn.jsdelivr.net",
         "https://fonts.googleapis.com",
         "https://*.paddle.com",
-        "https://sandbox-cdn.paddle.com"
+        "https://sandbox-cdn.paddle.com",
+        "https://cdnjs.cloudflare.com"
     ],
     'font-src': [
         "'self'",
@@ -261,6 +266,8 @@ PADDLE_PRO_YEARLY_PLAN_ID = os.getenv('PADDLE_PRO_YEARLY_PLAN_ID')
 # Set to True for sandbox/testing, False for production
 PADDLE_SANDBOX = True
 
+NPM_BIN_PATH = shutil.which("npm")
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'jasonachin33@example.com>'
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -311,3 +318,13 @@ LOGGING = {
         },
     },
 }
+
+TAILWIND_APP_NAME = 'theme'
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+# For development auto-reload
+if DEBUG:
+    INSTALLED_APPS += ['django_browser_reload']
+    MIDDLEWARE += ['django_browser_reload.middleware.BrowserReloadMiddleware']

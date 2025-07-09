@@ -27,6 +27,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
 </head>
 <body>
@@ -36,7 +38,7 @@
             <header class="d-md-none navbar navbar-light fixed-top shadow-sm">
                 <div class="container-fluid">
                     <a class="navbar-brand" href="{% url 'dashboard' %}">
-                        <img src="{% static 'logo1.png' %}" height='40' width='40' alt='logo' >
+                         <i class="fas fa-brain text-2xl text-blue-500 mr-2"></i>
                     </a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
                         <i data-feather="menu" class="feather"></i>
@@ -48,8 +50,8 @@
             <aside id="sidebar" class="d-none d-md-flex flex-column flex-shrink-0 shadow">
                 <div class="d-flex mb-2 border-bottom">
                 <a class="nav-link" href="{% url 'dashboard' %}">
-                    <i data-feather="cpu" class="feather" display='none' id="logo"></i>
-                     <img src="{% static 'logo.png' %}" height='45' width='170' alt='logo' id="logo-image" >
+                     <i class="fas fa-brain text-2xl text-blue-500 mr-2" id="logo"></i>
+                        <span class="text-xl font-bold text-gray-900" id="logo-image">KnowBite</span>
                 </a>
                 </div>
                 
@@ -83,7 +85,8 @@
             <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" style="width: 300px;">
                 <div class="offcanvas-header border-bottom">
                     <h5 class="offcanvas-title">
-                         <img src="{% static 'logo.png' %}" height='40' width='170' alt='logo' >
+                          <i class="fas fa-brain text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-900">KnowBite</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
@@ -134,7 +137,6 @@
             if (toggleBtn && sidebar) {
                 toggleBtn.addEventListener('click', function() {
                     sidebar.classList.toggle('collapsed');
-                    logo.style.display = 'block'
                     logoImage.style.display = 'none'
                 });
             }

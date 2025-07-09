@@ -1,180 +1,306 @@
-{% load static %}
+{% load static tailwind_tags%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KnowBite - Transform Your Content</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.css">
-    <link href="{% static 'css/landing.css' %}" rel="stylesheet" type="text/css">
+    <title>KnowBite - AI-Powered Study Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="{% static 'css/landing.css' %}">
+    {% tailwind_css %}
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    </style>
 </head>
-<body>
-
-    <!-- Header Section -->
-    <div class="land" style='margin-top:10px'>
-     <div class="d-flex justify-content-between align-items-center" >
-                <div class="d-flex align-items-center">
-                    <img src="{% static 'logo.png' %}" height='45' width='170' alt='logo' >
+<body class="gradient-bg min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i data-feather="cpu" class="text-2xl text-blue-500 mr-2"></i>
+                        <span class="text-xl font-bold text-gray-900">KnowBite</span>
+                    </div>
                 </div>
-                <a href="{% url 'register' %}"><button class="btn btn-primary">Get Started</button></a>
-     </div>
-    </div>
-    <div class="gradient-header">
-        <div class="container">
-            
-            <div class="text-center mx-auto" style="max-width: 700px;">
-                <h1 class="display-4 fw-bold mb-3" color='black'>Transform Your Learning with AI</h1>
-                <p class="text-muted mb-4">Upload PDFs, audio, and video files to generate quizzes, summaries, and unlock powerful insights instantly.</p>
-                <div class="d-flex gap-3 justify-content-center">
-                    <a href="{% url 'register' %}"><button class="btn btn-primary px-4">Try for Free</button></a>
-                    <a href="#demo"><button class="btn btn-outline-primary px-4">Learn More</button></a>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#features" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Features</a>
+                        <a href="#demo" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Demo</a>
+                        <a href="#testimonials" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Reviews</a>
+                        <a href="#pricing" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Pricing</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-600 hover:text-gray-900 text-sm font-medium">Sign In</button>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">
+                        Get Started
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden pt-16 pb-32">
+        <!-- Floating Elements -->
+        <div class="absolute inset-0 pointer-events-none">
+            <div class="floating-element absolute top-20 left-10 w-16 h-16 bg-blue-200 rounded-full opacity-60"></div>
+            <div class="floating-element absolute top-40 right-20 w-12 h-12 bg-purple-200 rounded-lg opacity-50"></div>
+            <div class="floating-element absolute top-60 left-1/4 w-8 h-8 bg-pink-200 rounded-full opacity-70"></div>
+            <div class="floating-element absolute bottom-40 right-10 w-20 h-20 bg-yellow-200 rounded-lg opacity-40"></div>
+            <div class="floating-element absolute bottom-20 left-1/3 w-6 h-6 bg-green-200 rounded-full opacity-60"></div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <!-- Rating -->
+            <div class="mb-8">
+                <div class="inline-flex items-center bg-white rounded-full px-4 py-2 shadow-sm">
+                    <div class="flex text-yellow-400 mr-2">
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                    </div>
+                    <span class="text-sm text-gray-600">Rated 4.9 from over 1,200 students</span>
+                </div>
+            </div>
+
+            <!-- Main Headline -->
+            <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                Transform Your Study Materials into
+                <span class="hero-gradient block mt-2">Interactive Learning</span>
+            </h1>
+
+            <!-- Subheadline -->
+            <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                Upload PDFs, audio files, and YouTube videos to instantly generate personalized quizzes, 
+                summaries, and get AI-powered study assistance.
+            </p>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+                <button class="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-blue-700 transition-colors flex items-center">
+                    <i data-feather="play" class="mr-2"></i>
+                    Start Learning
+                </button>
+                <button class="border border-gray-300 text-gray-700 px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-50 transition-colors">
+                    Watch Demo
+                </button>
+            </div>
+
+            <!-- Trusted By -->
+            <div class="text-center">
+                <p class="text-sm text-gray-500 mb-6">Trusted by students from</p>
+                <div class="flex flex-wrap justify-center items-center gap-8 opacity-60">
+                    <span class="text-gray-400 font-medium">Harvard</span>
+                    <span class="text-gray-400 font-medium">Stanford</span>
+                    <span class="text-gray-400 font-medium">MIT</span>
+                    <span class="text-gray-400 font-medium">Oxford</span>
+                    <span class="text-gray-400 font-medium">Cambridge</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Features Section -->
-    <div class="container py-5">
-        <h2 class="text-center fw-bold mb-5">Powerful Features</h2>
-        <div class="row g-4">
-            <!-- PDF Processing -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card feature-card h-100 p-4">
-                    <div class="card-body text-center">
-                        <i data-feather="file-text" class="feature" style="--icon-color-start: #ff6b6b; --icon-color-end: #ee5253"></i>
-                        <h3 class="h5 fw-bold mb-3">PDF Processing</h3>
-                        <p class="text-muted">Extract key information from your PDF documents automatically.</p>
-                    </div>
-                </div>
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Powerful AI Study Features</h2>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                    Everything you need to transform any content into an engaging learning experience
+                </p>
             </div>
-            <!-- Audio Analysis -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card feature-card h-100 p-4">
-                    <div class="card-body text-center">
-                        <i data-feather="headphones" class="feature"></i>
-                        <h3 class="h5 fw-bold mb-3">Audio Analysis</h3>
-                        <p class="text-muted">Convert speech to text and generate summaries from audio files.</p>
-                    </div>
-                </div>
-            </div>
-            <!-- Video Intelligence -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card feature-card h-100 p-4">
-                    <div class="card-body text-center">
-                        <i data-feather="video" class="feature" style="--icon-color-start: #fd9644; --icon-color-end: #fa8231"></i>
-                        <h3 class="h5 fw-bold mb-3">Video Intelligence</h3>
-                        <p class="text-muted">Extract insights and create notes from video content.</p>
-                    </div>
-                </div>
-            </div>
-            <!-- Smart Summaries -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card feature-card h-100 p-4">
-                    <div class="card-body text-center">
-                        <i data-feather="book-open" class="feature" style="--icon-color-start: #fed330; --icon-color-end: #f7b731"></i>
-                        <h3 class="h5 fw-bold mb-3">Smart Summaries</h3>
-                        <p class="text-muted">Get concise summaries of your content in seconds.</p>
-                    </div>
-                </div>
-            </div>
-            <!-- Quiz Generation -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card feature-card h-100 p-4">
-                    <div class="card-body text-center">
-                        <i data-feather="help-circle" class="feature" style="--icon-color-start: #4b7bec; --icon-color-end: #3867d6"></i>
-                        <h3 class="h5 fw-bold mb-3">Quiz Generation</h3>
-                        <p class="text-muted">Create interactive quizzes from your learning materials.</p>
-                    </div>
-                </div>
-            </div>
-            <!-- AI Insights -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card feature-card h-100 p-4">
-                    <div class="card-body text-center">
-                        <i data-feather="cpu" class="feature" style="--icon-color-start: #45aaf2; --icon-color-end: #2d98da"></i>
-                        <h3 class="h5 fw-bold mb-3">AI Insights</h3>
-                        <p class="text-muted">Gain deeper understanding with AI-powered analysis using the chatbot.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Testimonials Section -->
-    <div class="testimonial-section">
-        <div class="container">
-            <h2 class="text-center fw-bold mb-5">What Our Users Say</h2>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="testimonial-card">
-                        <p class="testimonial-quote">"KnowBite has revolutionized how I study. The smart summaries and quiz generation features have made my learning process so much more efficient."</p>
-                        <div class="testimonial-author">Sarah Johnson</div>
-                        <div class="testimonial-role">Graduate Student</div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-feather="file-text" class="text-2xl text-blue-600"></i>
                     </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">PDF Processing</h3>
+                    <p class="text-gray-600">Upload any PDF document and our AI will extract key concepts to create personalized study materials.</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="testimonial-card">
-                        <p class="testimonial-quote">"As a teacher, I love how easily I can convert my lecture recordings into comprehensive study materials. The AI insights are incredibly helpful."</p>
-                        <div class="testimonial-author">David Chen</div>
-                        <div class="testimonial-role">High School Teacher</div>
+
+                <div class="text-center p-8 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-feather="video" class="text-2xl text-purple-600"></i>
                     </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Video & Audio Learning</h3>
+                    <p class="text-gray-600">Transform YouTube videos and audio recordings into structured notes and interactive quizzes.</p>
                 </div>
-                <div class="col-md-4">
-                    <div class="testimonial-card">
-                        <p class="testimonial-quote">"The PDF processing feature is a game-changer. I can quickly extract key information from research papers and create summaries in minutes."</p>
-                        <div class="testimonial-author">Emily Martinez</div>
-                        <div class="testimonial-role">Research Analyst</div>
+
+                <div class="text-center p-8 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-feather="cpu" class="text-2xl text-green-600"></i>
                     </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">AI Study Assistant</h3>
+                    <p class="text-gray-600">Get instant answers, explanations, and study guidance from your personal AI tutor.</p>
+                </div>
+
+                <div class="text-center p-8 rounded-2xl bg-gradient-to-br from-yellow-50 to-orange-50 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-feather="help-circle" class="text-2xl text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Smart Quizzes</h3>
+                    <p class="text-gray-600">Auto-generated quizzes that adapt to your learning progress and focus on weak areas.</p>
+                </div>
+
+                <div class="text-center p-8 rounded-2xl bg-gradient-to-br from-red-50 to-pink-50 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-feather="file" class="text-2xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Instant Summaries</h3>
+                    <p class="text-gray-600">Get concise, well-structured summaries of any content in seconds, not hours.</p>
+                </div>
+
+                <div class="text-center p-8 rounded-2xl bg-gradient-to-br from-teal-50 to-cyan-50 hover:shadow-lg transition-shadow">
+                    <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-feather="bar-chart-2" class="text-2xl text-teal-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Progress Tracking</h3>
+                    <p class="text-gray-600">Monitor your learning journey with detailed analytics and personalized recommendations.</p>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- Demo Section -->
-    <div class="bg-light py-5" id="demo">
-        <div class="container">
-            <h2 class="fw-bold mb-3">See it in Action</h2>
-            <p class="text-muted mb-4">Watch how easily you can transform your documents into interactive learning materials.</p>
-            
-            <div class="row g-4">
-                <div class="col-lg-8">
-                    <img src="/api/placeholder/800/400" alt="Demo" class="img-fluid rounded shadow">
+    <section id="demo" class="py-20 gradient-bg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">See KnowBite in Action</h2>
+                <p class="text-xl text-gray-600">Watch how easy it is to transform any content into interactive learning</p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-4xl mx-auto">
+                <div class="aspect-video bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                    <button class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                        <i data-feather="play" class="text-2xl text-blue-600 ml-1"></i>
+                    </button>
                 </div>
-                <div class="col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h3 class="h5 fw-bold mb-4">Supported File Types</h3>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-file-pdf me-2 text-primary"></i>
-                                <span>PDF Documents</span>
-                            </div>
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="fas fa-headphones me-2 text-primary"></i>
-                                <span>Audio Files (MP3, WAV)</span>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-video me-2 text-primary"></i>
-                                <span>YouTube Videos</span>
-                            </div>
+                <div class="p-8">
+                    <h3 class="text-2xl font-semibold text-gray-900 mb-4">3-Minute Demo: From Upload to Quiz</h3>
+                    <p class="text-gray-600 mb-6">See how Sarah uploaded her biology textbook chapter and created a personalized quiz in under 60 seconds.</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-500">Duration: 3:24</span>
+                            <span class="text-sm text-gray-500">•</span>
+                            <span class="text-sm text-gray-500">1.2K views</span>
+                        </div>
+                        <button class="text-blue-600 hover:text-blue-700 font-medium">Watch Full Demo →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">What Students Are Saying</h2>
+                <p class="text-xl text-gray-600">Join thousands of students who've transformed their study habits</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gray-50 rounded-2xl p-8">
+                    <div class="flex text-yellow-400 mb-4">
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6">"KnowBite helped me ace my medical school exams. The AI-generated quizzes were spot-on and saved me hours of study time."</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold mr-4">
+                            <i data-feather="user"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">Sarah Chen</p>
+                            <p class="text-sm text-gray-500">Medical Student, Johns Hopkins</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-2xl p-8">
+                    <div class="flex text-yellow-400 mb-4">
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6">"The YouTube video processing is incredible. I can now study lecture recordings efficiently with auto-generated summaries."</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-semibold mr-4">
+                            <i data-feather="user"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">Marcus Johnson</p>
+                            <p class="text-sm text-gray-500">Computer Science, MIT</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-2xl p-8">
+                    <div class="flex text-yellow-400 mb-4">
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                        <i data-feather="star"></i>
+                    </div>
+                    <p class="text-gray-700 mb-6">"As a working professional studying for certifications, KnowBite's AI chatbot is like having a personal tutor available 24/7."</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-semibold mr-4">
+                            <i data-feather="user"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">Emily Rodriguez</p>
+                            <p class="text-sm text-gray-500">Data Analyst, Google</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- CTA Section -->
-    <div class="container py-5 text-center">
-        <h2 class="fw-bold mb-3">Ready to Get Started?</h2>
-        <p class="text-muted mb-4">Join thousands of users who are already transforming their content with AI.</p>
-       <a href="{% url 'register' %}"><button class="btn btn-primary btn-lg px-5">Start Free Trial</button></a>
-    </div>
+    <section class="py-20 gradient-bg">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-gray-900 mb-6">Ready to Transform Your Learning?</h2>
+            <p class="text-xl text-gray-600 mb-8">Join over 1,000 students who are already studying smarter with KnowBite</p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                <button class="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-blue-700 transition-colors">
+                    Start Free Trial
+                </button>
+                <button class="border border-gray-300 text-gray-700 px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-50 transition-colors">
+                    Schedule Demo
+                </button>
+            </div>
+            
+            <p class="text-sm text-gray-500">No credit card required</p>
+        </div>
+    </section>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <script>feather.replace()</script>
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm">© 2024 KnowBite. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-white"><i data-feather="twitter"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i data-feather="linkedin"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white"><i data-feather="github"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<script>feather.replace()</script>
 </html>
