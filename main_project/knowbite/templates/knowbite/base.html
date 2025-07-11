@@ -27,7 +27,7 @@
             <header class="d-md-none navbar navbar-light fixed-top shadow-sm">
                 <div class="container-fluid">
                     <a class="navbar-brand" href="{% url 'dashboard' %}">
-                         <i class="fas fa-brain text-2xl text-blue-500 mr-2"></i>
+                         <img src="{% static "logo.png" %}" alt="logo" height="30px" width="30px">
                     </a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
                         <i data-feather="menu" class="feather"></i>
@@ -38,7 +38,7 @@
             <!-- Desktop Sidebar (shows on medium+ screens) -->
             <aside id="sidebar" class="d-none d-md-flex flex-column flex-shrink-0 shadow">
                 <div class="d-flex align-items-center p-3 mb-3 border-bottom">
-                     <i class="fas fa-brain text-2xl text-blue-500 mr-2" id="logo"></i>
+                     <img src="{% static 'logo.png' %}" alt="logo" id="logo" height="30" width="30px">
                         <span class="text-xl font-bold text-gray-900" id="logo-image">KnowBite</span>
                 </div>
                 
@@ -83,7 +83,7 @@
             <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" style="width: 300px;">
                 <div class="offcanvas-header border-bottom">
                     <h5 class="offcanvas-title">
-                         <i class="fas fa-brain text-2xl text-blue-500 mr-2"></i>
+                         <img src="{% static 'logo.png' %}" alt="logo" height="30" width="30px">
                         <span class="text-xl font-bold text-gray-900">KnowBite</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>

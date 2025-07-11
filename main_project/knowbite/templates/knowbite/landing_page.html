@@ -19,7 +19,7 @@
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center">
-                        <i data-feather="cpu" class="text-2xl text-blue-500 mr-2"></i>
+                        <img src="{% static 'logo.png' %}" alt="logo" height="30" width="30px">
                         <span class="text-xl font-bold text-gray-900">KnowBite</span>
                     </div>
                 </div>
@@ -28,14 +28,13 @@
                         <a href="#features" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Features</a>
                         <a href="#demo" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Demo</a>
                         <a href="#testimonials" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Reviews</a>
-                        <a href="#pricing" class="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium">Pricing</a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button class="text-gray-600 hover:text-gray-900 text-sm font-medium">Sign In</button>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">
+                   <a href={% url 'login' %} ><button class="text-gray-600 hover:text-gray-900 text-sm font-medium">Sign In</button></a>
+                   <a href={% url 'register' %} ><button class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">
                         Get Started
-                    </button>
+                    </button></a>
                 </div>
             </div>
         </div>
@@ -81,13 +80,13 @@
 
             <!-- CTA Buttons -->
             <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                <button class="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-blue-700 transition-colors flex items-center">
+                <a href={% url 'register' %}><button class="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-blue-700 transition-colors flex items-center">
                     <i data-feather="play" class="mr-2"></i>
                     Start Learning
-                </button>
-                <button class="border border-gray-300 text-gray-700 px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-50 transition-colors">
+                </button></a>
+                <a href='#demo'><button class="border border-gray-300 text-gray-700 px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-50 transition-colors">
                     Watch Demo
-                </button>
+                </button></a>
             </div>
 
             <!-- Trusted By -->
@@ -275,12 +274,9 @@
             <p class="text-xl text-gray-600 mb-8">Join over 1,000 students who are already studying smarter with KnowBite</p>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-                <button class="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-blue-700 transition-colors">
+                <a href="{% url 'register' %}"> <button class="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-blue-700 transition-colors">
                     Start Free Trial
-                </button>
-                <button class="border border-gray-300 text-gray-700 px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-50 transition-colors">
-                    Schedule Demo
-                </button>
+                </button></a>
             </div>
             
             <p class="text-sm text-gray-500">No credit card required</p>
