@@ -102,6 +102,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'main_project.middleware.SecurityHeadersMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 # Security Headers
@@ -239,6 +240,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -257,7 +260,7 @@ PADDLE_VENDOR_ID = os.getenv('PADDLE_VENDOR_ID')
 PADDLE_CLIENT_TOKEN = os.getenv('PADDLE_CLIENT_TOKEN')
 PADDLE_API_KEY = os.getenv('PADDLE_API_KEY')  
 
-# These should match the paddle_plan_id values you set in the admin for each plan
+
 PADDLE_BASIC_MONTHLY_PLAN_ID = os.getenv('PADDLE_BASIC_MONTHLY_PLAN_ID')
 PADDLE_BASIC_YEARLY_PLAN_ID = os.getenv('PADDLE_BASIC_YEARLY_PLAN_ID')
 PADDLE_PRO_MONTHLY_PLAN_ID = os.getenv('PADDLE_PRO_MONTHLY_PLAN_ID')
