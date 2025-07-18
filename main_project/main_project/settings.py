@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     'cloudinary_storage',
-    'cloudinary'
+    'cloudinary',
     # Allauth for social login
     'django.contrib.sites',
     'allauth',
