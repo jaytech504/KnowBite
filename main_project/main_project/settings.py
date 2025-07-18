@@ -19,6 +19,10 @@ import os
 import dj_database_url
 import certifi
 import shutil
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
 
@@ -237,12 +241,15 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Media files (user uploads)
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME' : os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+MEDIA_URL = '/media/'
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
