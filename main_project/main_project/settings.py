@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-d)@r43sfdo&nx3h5p)z-g^qnc74z^3rzvf^8n6ei8v@sa4v5q1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'knowbite.onrender.com',
@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'sendgrid',
     'tailwind',
     'theme',
+    'cloudinary_storage',
+    'cloudinary'
     # Allauth for social login
     'django.contrib.sites',
     'allauth',
@@ -64,6 +66,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'widget_tweaks',
+
 ]
 
 SITE_ID = 1
@@ -234,9 +237,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME' : os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
