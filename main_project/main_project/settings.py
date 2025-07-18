@@ -36,9 +36,7 @@ SECRET_KEY = 'django-insecure-d)@r43sfdo&nx3h5p)z-g^qnc74z^3rzvf^8n6ei8v@sa4v5q1
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'eaee-102-88-115-166.ngrok-free.app',
+    'knowbite.onrender.com',
 ]
 
 # Application definition
