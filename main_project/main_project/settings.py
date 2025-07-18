@@ -94,7 +94,8 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         'AUTH_PARAMS': {
             'access_type': 'online',
-        }
+        },
+        'OAUTH_PKCE_ENABLED': True,
     }
 }
 
@@ -114,6 +115,10 @@ MIDDLEWARE = [
 # Security Headers
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 CSP_HEADER = {
     'default-src': ["'self'", "https://*.paddle.com", "https://*.bootstrapcdn.com", "https://cdn.jsdelivr.net"],
@@ -146,7 +151,9 @@ CSP_HEADER = {
         "'self'",
         "https://*.paddle.com",
         "https://sandbox-buy.paddle.com",
-        "https://sandbox-checkout.paddle.com"
+        "https://sandbox-checkout.paddle.com",
+        "https://*.google.com",
+        "https://accounts.google.com",
     ],
     'frame-ancestors': [
         "'self'",
@@ -160,7 +167,8 @@ CSP_HEADER = {
         "https://sandbox-checkout.paddle.com",
         "https://sandbox-buy.paddle.com",
         "https://sandbox-checkout-service.paddle.com",
-        "wss://*.paddle.com"
+        "wss://*.paddle.com",
+        "https://accounts.google.com",
     ],
     'img-src': [
         "'self'",
