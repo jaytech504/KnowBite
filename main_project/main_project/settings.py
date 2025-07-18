@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+import dj_database_url
 import certifi
 import shutil
 os.environ['SSL_CERT_FILE'] = certifi.where()
@@ -190,14 +191,7 @@ WSGI_APPLICATION = 'main_project.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
-    }
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
     
 }
 
