@@ -22,7 +22,6 @@ import json
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
 from knowbite.models import UploadedFile, Summary, ChatMessage, ExtractedText, Quiz
-from transformers import AutoTokenizer
 from django.utils.safestring import mark_safe
 import google.generativeai as genai
 import assemblyai as aai
