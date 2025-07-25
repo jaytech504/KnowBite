@@ -1,0 +1,75 @@
+{% extends 'knowbite/base.html' %}
+{% block content %}
+    <div>
+        <h3 class="mb-4">Dashboard</h3>
+        {% if messages %}
+                {% for message in messages %}
+                    <div class="{{ message.tags }} alert-dismissible fade show" role="alert" >{{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        <div class="row g-4">
+            <!-- PDF Upload Card -->
+            
+            <div class="col-md-4">
+                <div class="upload-card" onclick="triggerFileUpload('pdf')">
+                    <i class="bi bi-file-earmark-pdf upload-icon"></i>
+                    <h4>PDF</h4>
+                    <p class="descrip">Upload PDF file</p>
+                </div>
+            </div>
+
+            <!-- Audio Upload Card -->
+            <div class="col-md-4">
+                <div class="upload-card" onclick="triggerFileUpload('audio')">
+                    <i class="bi bi-headphones upload-icon"></i>
+                    <h4>Audio</h4>
+                    <p class="descrip">Upload audio file</p>
+                </div>
+            </div>
+
+            <!-- Video Upload Card -->
+            <div class="col-md-4">
+                <div class="upload-card" onclick="showYoutubeInput()">
+                    <i class="bi bi-youtube upload-icon" style="color: #ff0000;"></i>
+                    <h4>YouTube</h4>
+                    <p class="descrip">Paste YouTube link</p>
+                </div>
+            </div>
+        
+        <!-- Hidden File Upload Form -->
+        <form method="post" enctype="multipart/form-data" id="upload-form" action="{% url 'upload' %}" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" name="file_type" id="file_type">
+            <input type="file" name="file" id="file-input" onchange="submitForm()">
+        </form>
+        
+        <!-- YouTube Input Form (initially hidden) -->
+        <div class="youtube-input" id="youtube-input" style="display: none; margin-top: 20px;">
+            <form method="post" id="youtube-form" action="{% url 'upload' %}">
+                {% csrf_token %}
+                <input type="hidden" name="file_type" value="youtube">
+                <div class="input-group">
+                    <input type="text" name="youtube_link" id="youtube-link" 
+                           class="form-control" placeholder="Paste YouTube link here" required
+                           pattern="^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-upload"></i> Process
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="hideYoutubeInput()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            </form>
+        </div>  
+        <div id="loading-overlay" style="display: none;">
+            <div class="loading-content">
+              <div class="spinner"></div>
+              <div class="progress-container">
+                <div class="progress-bar" id="upload-progress"></div>
+                <span id="progress-text">Processing your file...</span>
+              </div>
+            </div>
+          </div>
+    </div>   
+{% endblock %}

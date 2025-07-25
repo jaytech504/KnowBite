@@ -1,0 +1,100 @@
+body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+    min-height: 100vh;
+    font-family: 'Inter', Arial, sans-serif;
+}
+.auth-container {
+    max-width: 450px;
+    margin: 3rem auto;
+    background: #fff;
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(60,72,100,0.12);
+    padding: 2.5rem 2rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.logo-container {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.logo {
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+}
+.google-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 50px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    color: #374151;
+    box-shadow: 0 2px 8px rgba(60,72,100,0.06);
+    margin-bottom: 1.2rem;
+    transition: box-shadow 0.2s, border 0.2s;
+    text-decoration: none;
+}
+.google-button:hover {
+    border: 1px solid #6366f1;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.10);
+    color: #4338ca;
+    text-decoration: none;
+}
+.terms {
+    font-size: smaller;
+    text-decoration: underline;
+}
+.divider {
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+    line-height: 0.1em;
+    margin: 1.2rem 0 1.5rem 0;
+}
+.divider span {
+    background: #fff;
+    padding: 0 1rem;
+    color: #a1a1aa;
+    font-size: 0.95rem;
+}
+form {
+    width: 100%;
+}
+.btn-primary {
+    background: linear-gradient(90deg, #6B73FF 0%, #0d6efd 100%);
+    border: none;
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 0.7rem 0;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: background 0.2s;
+}
+.btn-primary:hover {
+    background: linear-gradient(90deg, #0d6efd 0%, #6B73FF 100%);
+}
+.text-center a {
+    color: #6366f1;
+    font-weight: 500;
+    text-decoration: none;
+}
+.text-center a:hover {
+    text-decoration: underline;
+}
+@media (max-width: 600px) {
+    .auth-container {
+        max-width: 98vw;
+        padding: 1.2rem 0.5rem;
+    }
+    .logo {
+        font-size: 1.3rem;
+    }
+}

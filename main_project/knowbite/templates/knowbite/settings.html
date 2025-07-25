@@ -1,0 +1,29 @@
+{% extends 'knowbite/base.html' %}
+{% block content %}
+    <div class="container">
+        <div class="account-card">
+            <h4 class="mb-4">My Account</h4>
+            
+            <div class="info-row">
+                <div>Email</div>
+                <div class="descrip">{{ user.email }}</div>
+            </div>
+            
+            <div class="info-row">
+                <div>Name</div>
+                <div class="descrip">{{ user.username }}</div>
+            </div>
+            
+            <div class="info-row">
+                <div>Current Pricing Plan</div>
+                <div class="descrip">{{ user_plan.plan.name }}</div>
+            </div>
+            
+            <a class="btn btn-primary w-100 btn-billing" href="{% url 'pricing' %}">
+                        <i data-feather="zap" class="feather"></i>
+                        <span class="nav-link-text">Billing Portal</span>
+            </a>
+        </div>
+    </div>
+
+{% endblock %}

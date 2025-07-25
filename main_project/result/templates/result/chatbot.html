@@ -1,0 +1,25 @@
+{% extends 'result/base_result.html' %}
+{% load markdownify %}
+{% block result %}
+<div class="container-fluid p-0 chat-cont">
+<div id="chatbot-section" class="h-100 d-flex flex-column" style="flex: 0 0 400px; min-width: 300px;">
+    <div id="chat-messages" class="flex-grow-1 overflow-auto p-3">
+      {% for message in chat_history %}
+        <div class="message {{ message.role }}">{{ message.formatted_content|safe }}</div>
+      {% empty %}
+        <p>No chat history yet.</p>
+      {% endfor %}
+    </div>
+    <div class="chat-input p-3 border-top bg-white">
+      <div class="input-group">
+        <input type="text" id="user-message" class="form-control" placeholder="Ask me about the summary...">
+        <button id="send-button" class="btn btn-primary">
+          <i data-feather="send" class="feather-icon"></i>
+        </button>
+      </div>
+      <div id="loading-indicator" class="mt-2 text-muted small" style="display: none;">
+        Generating response...
+      </div>
+    </div>
+</div>
+{% endblock %}

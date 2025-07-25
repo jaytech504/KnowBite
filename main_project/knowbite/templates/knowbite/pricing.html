@@ -1,0 +1,135 @@
+{% extends "knowbite/base.html" %}
+{% block content %}
+<style>
+.price-card {
+    display: none;
+}
+
+.price-card.active {
+    display: block;
+}
+</style>
+
+<div class="pricing-header text-center">
+    <h5 class="display-5 mb-3">Simple, Transparent Pricing</h5>
+    <p class="lead mb-4">Choose the perfect plan for your learning needs</p>
+    
+    <div class="period-toggle-container">
+        <div class="period-toggle">
+            <input type="radio" id="monthly" name="billing-period" value="monthly" checked>
+            <label for="monthly">Monthly</label>
+            <input type="radio" id="yearly" name="billing-period" value="yearly">
+            <label for="yearly">Yearly</label>
+        </div>
+        <div class="yearly-discount">Save 20% with annual billing</div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center g-4">
+        {% for plan in plans %}
+        <div class="col-md-6 col-lg-4 price-card {% if plan.get_billing_period_display == 'Monthly' %}active{% endif %}" 
+             data-period="{{ plan.get_billing_period_display|lower }}">
+            <div class="card h-100 pricing-card {% if plan.get_name_display == 'Pro' %}most-popular{% endif %}">
+                {% if plan.get_name_display == 'Pro' %}
+                <div class="popular-badge">Most Popular</div>
+                {% endif %}
+                <div class="card-body d-flex flex-column p-4">
+                    <div class="text-center mb-4">
+                        <h3 class="mb-1">{{ plan.get_name_display }}</h3>
+                        <div class="price-amount mb-2">${{ plan.price }}</div>
+                        <div class="price-period">per {{ plan.get_billing_period_display|lower }}</div>
+                    </div>
+
+                    <ul class="feature-list mb-4">
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">Premium styled Summaries</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.pdf_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.pdf_uploads_per_month }}{% endif %} PDF uploads</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.audio_uploads_per_month >= 9999 %}Unlimited{% else %}{{ plan.audio_uploads_per_month }}{% endif %} Audio uploads</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.youtube_links_per_month >= 9999 %}Unlimited{% else %}{{ plan.youtube_links_per_month }}{% endif %} YouTube summaries</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.quizzes_per_month >= 9999 %}Unlimited{% else %}{{ plan.quizzes_per_month }}{% endif %} AI-powered quizzes</span>
+                        </li>
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">{% if plan.chatbot_messages_per_file >= 9999 %}Unlimited{% else %}{{ plan.chatbot_messages_per_file }}{% endif %} chatbot messages per file</span>
+                        </li>
+                    </ul>
+
+                    <button class="btn btn-outline-primary mt-auto w-100 subscribe-btn" 
+                            data-plan-id="{{ plan.polar_plan_id }}">
+                        Get Started
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Monthly/Yearly toggle functionality
+    const monthlyRadio = document.getElementById('monthly');
+    const yearlyRadio = document.getElementById('yearly');
+    const priceCards = document.querySelectorAll('.price-card');
+    
+    function updatePricingDisplay(isYearly) {
+        priceCards.forEach(card => {
+            const period = card.getAttribute('data-period');
+            if ((isYearly && period === 'yearly') || (!isYearly && period === 'monthly')) {
+                card.classList.add('active');
+            } else {
+                card.classList.remove('active');
+            }
+        });
+
+        document.querySelector('.yearly-discount').style.opacity = isYearly ? '1' : '0';
+    }
+
+    monthlyRadio.addEventListener('change', () => updatePricingDisplay(false));
+    yearlyRadio.addEventListener('change', () => updatePricingDisplay(true));
+
+    const subscribeButtons = document.querySelectorAll('.subscribe-btn');
+
+    subscribeButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const planId = this.getAttribute('data-plan-id');
+            try {
+                const response = await fetch('/create-subscription/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ plan_id: planId })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success' && data.checkout_url) {
+                    // Redirect to Polar checkout
+                    window.location.href = data.checkout_url;
+                } else {
+                    alert(`Error: ${data.message || 'Something went wrong'}`);
+                }
+            } catch (error) {
+                console.error('Error creating subscription:', error);
+                alert('An error occurred while creating the subscription.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

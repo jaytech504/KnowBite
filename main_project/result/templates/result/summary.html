@@ -1,0 +1,59 @@
+{% extends 'result/base_result.html' %}
+{% load markdownify %}
+{% block result %}
+<div class="container-fluid p-0 summary-cont"> <!-- Adjust height based on your header -->
+    <div class="row g-0 h-100" id="resizable-layout">
+      <!-- Summary Section -->
+      <div id="summary-section" class="h-100 overflow-hidden d-flex flex-column" style="min-width: 200px;">
+          <button id="regenerateBtn" class="btn btn-regenerate">
+            <span class="icon">⟳</span>
+            Regenerate Summary
+          </button>
+        <div class="summary-text flex-grow-1 overflow-auto p-3" id="summaryContent">
+          {{ summary | safe }}
+        </div>
+      </div>
+  
+      <!-- Resizable Handle -->
+      <div class="resize-handle bg-light" style="width: 8px; cursor: col-resize;"></div>
+  
+      <!-- Chatbot Section -->
+      <div id="chatbot-section" class="h-100 d-flex flex-column chatbot-sec" style="flex: 0 0 400px; min-width: 300px;">
+        <div class="p-3">
+          <h4 class="m-0">Chatbot</h4>
+        </div>
+        <div id="chat-messages" class="flex-grow-1 overflow-auto p-3">
+          {% for message in chat_history %}
+            <div class="message {{ message.role }}">{{ message.formatted_content|safe }}</div>
+          {% empty %}
+            <p>No chat history yet.</p>
+          {% endfor %}
+        </div>
+        <div class="chat-input p-3 border-top bg-white">
+          <div class="input-group">
+            <input type="text" id="user-message" class="form-control" placeholder="Ask me about the summary...">
+            <button id="send-button" class="btn btn-primary">
+              <i data-feather="send" class="feather-icon"></i>
+            </button>
+          </div>
+          <div id="loading-indicator" class="mt-2 text-muted small" style="display: none;">
+            Generating response...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+    <!-- Regenerate Confirmation Dialog -->
+    <div id="regenerateConfirm" class="confirm-dialog" style="display: none;">
+      <div class="dialog-content">
+        <p>Are you sure you want to regenerate the summary?</p>
+        <div class="dialog-buttons">
+          <button id="confirmRegenerate" class="dialog-btn confirm-btn">Yes, Regenerate</button>
+          <button id="cancelRegenerate" class="dialog-btn cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+{% endblock %}

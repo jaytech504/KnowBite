@@ -1,0 +1,9 @@
+{% extends 'result/base_result.html' %}
+{% load markdownify %}
+{% block result %}
+    <div class="container">
+        <h4> Extracted Text</h4> 
+        <p>{{ transcript|safe }}</p>
+        </div>
+    </div>
+{% endblock %}

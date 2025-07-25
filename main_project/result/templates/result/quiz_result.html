@@ -1,0 +1,85 @@
+{% extends 'result/base_result.html' %}
+{% block result %}
+<div class="quiz-results-container">
+    <div class="results-header">
+        <h2 class="results-title">Quiz Results</h2>
+        <div class="score-display">
+            <div class="score-circle" data-score="{{ score }}">
+                <svg class="score-progress" viewBox="0 0 100 100">
+                    <circle class="score-bg" cx="50" cy="50" r="45"></circle>
+                    <circle class="score-fill" cx="50" cy="50" r="45" 
+                            stroke-dasharray="283" stroke-dashoffset="0"></circle>
+                </svg>
+                <div class="score-value">{{ score }}%</div>
+            </div>
+            <div class="score-feedback">
+                {% if score >= 80 %}
+                <p>Excellent work! 🎉</p>
+                {% elif score >= 60 %}
+                <p>Good job! 👍</p>
+                {% else %}
+                <p>Keep practicing! 💪</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="results-breakdown">
+        <div class="results-summary">
+            <div class="summary-item correct">
+                <span class="summary-count">{{ correct_count }}</span>
+                <span class="summary-label">Correct</span>
+            </div>
+            <div class="summary-item incorrect">
+                <span class="summary-count">{{ incorrect_count }}</span>
+                <span class="summary-label">Incorrect</span>
+            </div>
+            <div class="summary-item total">
+                <span class="summary-count">{{ results|length }}</span>
+                <span class="summary-label">Total Questions</span>
+            </div>
+        </div>
+
+        <div class="question-results">
+            {% for result in results %}
+            <div class="question-card {% if result.user_choice == result.correct_choice %}correct{% else %}incorrect{% endif %}">
+                <div class="question-header">
+                    <span class="question-number">Question {{ forloop.counter }}</span>
+                    <span class="question-status">
+                        {% if result.user_choice == result.correct_choice %}
+                        ✓ Correct
+                        {% else %}
+                        ✗ Incorrect
+                        {% endif %}
+                    </span>
+                </div>
+                <p class="question-text">{{ result.question }}</p>
+                
+                <div class="options-results">
+                    {% for option in result.options %}
+                    <div class="option-result {% if option == result.correct_choice %}correct-answer{% endif %} {% if option == result.user_choice and option != result.correct_choice %}user-incorrect{% endif %}">
+                        <span class="option-letter">{{ forloop.counter|stringformat:"c"|upper }}</span>
+                        <span class="option-text">{{ option }}</span>
+                        {% if option == result.correct_choice %}
+                        <span class="correct-icon">✓</span>
+                        {% elif option == result.user_choice and option != result.correct_choice %}
+                        <span class="incorrect-icon">✗</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="results-actions">
+        <a href="{% url 'take_quiz' file.id %}" class="retake-btn">
+            Retake Quiz
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 4V9H4.58152M19.9381 11C19.446 7.05369 16.0796 4 12 4C8.64262 4 5.76829 6.06817 4.58152 9M4.58152 9H9M20 20V15H19.4185M19.4185 15C18.2317 17.9318 15.3574 20 12 20C7.92038 20 4.55399 16.9463 4.06189 13M19.4185 15H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
+    </div>
+</div>
+{% endblock %}

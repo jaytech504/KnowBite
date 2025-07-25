@@ -1,0 +1,179 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if title %}
+        <title>KnowBite-{{ title }}</title>
+    {% else %}
+        <title>KnowBite</title>
+    {% endif %}
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+    <!-- Bootstrap Icons -->
+     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans&family=Roboto+Mono&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/dash.js' %}"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid px-0">
+        <div class="row flex-nowrap">
+            <!-- Mobile Header (only shows on small screens) -->
+            <header class="d-md-none navbar navbar-light fixed-top shadow-sm">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="{% url 'dashboard' %}">
+                         <img src="{% static "logo.png" %}" alt="logo" height="30px" width="30px">
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
+                        <i data-feather="menu" class="feather"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Desktop Sidebar (shows on medium+ screens) -->
+            <aside id="sidebar" class="d-none d-md-flex flex-column flex-shrink-0 shadow">
+                <div class="d-flex align-items-center p-3 mb-3 border-bottom">
+                     <img src="{% static 'logo.png' %}" alt="logo" id="logo" height="30" width="30px">
+                        <span class="text-xl font-bold text-gray-900" id="logo-image">KnowBite</span>
+                </div>
+                
+                <nav class="nav flex-column mb-auto">
+                    <a class="nav-link active" href="{% url 'dashboard' %}">
+                        <i data-feather="home" class="feather"></i>
+                        <span class="nav-link-text">Dashboard</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'yournotes' %}">
+                        <i data-feather="file-text" class="feather"></i>
+                        <span class="nav-link-text">Your Notes</span>
+                    </a>
+                    <a class="nav-link" href="{% url 'settings' %}">
+                        <i data-feather="settings" class="feather"></i>
+                        <span class="nav-link-text">Settings</span>
+                    </a>                    
+                    {% if request.user.usersubscription.plan.name == 'free' %}
+                    <a class="nav-link upgrade-btn" href="{% url 'pricing' %}">
+                        <i data-feather="zap" class="feather"></i>
+                        <span class="nav-link-text">Upgrade Plan</span>
+                    </a>
+                    {% else %}
+                    <a class="nav-link subscription-status" href="{% url 'subscription_status' %}">
+                        <i data-feather="award" class="feather"></i>
+                        <span class="nav-link-text">Subscription Status</span>
+                    </a>
+                    {% endif %}
+                </nav>
+                
+                <div class="border-top">
+                    <button class="btn w-100 text-start rounded-0 p-3 toggle-btn">
+                        <i data-feather="chevron-left" class="feather toggle-icon"></i>
+                    </button>
+                    <a class="nav-link" href="{% url 'logout' %}">
+                        <i data-feather="log-out" class="feather"></i>
+                        <span class="nav-link-text">Logout</span>
+                    </a>
+                </div>
+            </aside>
+
+            <!-- Mobile Sidebar (offcanvas) -->
+            <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" style="width: 300px;">
+                <div class="offcanvas-header border-bottom">
+                    <h5 class="offcanvas-title">
+                         <img src="{% static 'logo.png' %}" alt="logo" height="30" width="30px">
+                        <span class="text-xl font-bold text-gray-900">KnowBite</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body p-0">
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="{% url 'dashboard' %}">
+                            <i data-feather="home" class="feather"></i>
+                            Dashboard
+                        </a>
+                        <a class="nav-link" href="{% url 'yournotes' %}">
+                            <i data-feather="file-text" class="feather"></i>
+                            Your Notes
+                        </a>
+                        <a class="nav-link" href="{% url 'settings' %}">
+                            <i data-feather="settings" class="feather"></i>
+                            Settings
+                        </a>                        
+                        {% if user.usersubscription.plan.name == 'free' %}
+                        <a class="nav-link upgrade-btn" href="{% url 'pricing' %}">
+                            <i data-feather="zap" class="feather"></i>
+                            Upgrade Plan
+                        </a>
+                        {% else %}
+                        <a class="nav-link subscription-status" href="{% url 'subscription_status' %}">
+                            <i data-feather="award" class="feather"></i>
+                            Subscription Status
+                        </a>
+                        {% endif %}
+                        <a class="nav-link" href="{% url 'logout' %}">
+                            <i data-feather="log-out" class="feather"></i>
+                            Logout
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main id="content" class="main-part">
+                <div class="content-container container-fluid py-4">
+                        {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize feather icons
+            feather.replace();
+            
+            // Desktop sidebar toggle
+            const toggleBtn = document.querySelector('.toggle-btn');
+            const sidebar = document.getElementById('sidebar');
+            const logoImage = document.getElementById('logo-image');
+            const logo = document.getElementById('logo');
+            
+            
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    logoImage.style.display = 'none';
+                    logo.style.display = 'block'
+
+                });
+            }
+
+            document.body.addEventListener('wheel', function(e) {
+                if (e.deltaY === 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            // Adjust content padding on mobile
+            function adjustContentPadding() {
+                const header = document.querySelector('.navbar.fixed-top');
+                if (header && window.innerWidth < 768) {
+                    const headerHeight = header.offsetHeight;
+                    document.querySelector('#content').style.paddingTop = headerHeight + 'px';
+                }
+            }
+            
+            // Run on load and resize
+            adjustContentPadding();
+            window.addEventListener('resize', adjustContentPadding);
+        });
+    </script>
+
+</body>
+</html>

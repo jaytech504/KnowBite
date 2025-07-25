@@ -1,0 +1,37 @@
+{% extends "knowbite/base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="card">
+        <div class="card-header">
+            <h2>Subscription Debug Information</h2>
+        </div>
+        <div class="card-body">
+            {% if status.has_subscription %}
+                <dl class="row">
+                    <dt class="col-sm-4">Subscription Status</dt>
+                    <dd class="col-sm-8">{{ status.status }}</dd>
+
+                    <dt class="col-sm-4">Is Active</dt>
+                    <dd class="col-sm-8">{{ status.is_active }}</dd>
+
+                    <dt class="col-sm-4">Plan</dt>
+                    <dd class="col-sm-8">{{ status.plan }}</dd>
+
+                    <dt class="col-sm-4">Trial End</dt>
+                    <dd class="col-sm-8">{{ status.trial_end|default:"No trial" }}</dd>
+
+                    <dt class="col-sm-4">Current Period End</dt>
+                    <dd class="col-sm-8">{{ status.current_period_end|default:"Not set" }}</dd>
+
+                    <dt class="col-sm-4">Polar Subscription ID</dt>
+                    <dd class="col-sm-8">{{ status.polar_subscription_id|default:"Not set" }}</dd>
+                </dl>
+            {% else %}
+                <div class="alert alert-warning">
+                    {{ status.message }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

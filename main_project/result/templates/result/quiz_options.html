@@ -1,0 +1,52 @@
+{% extends 'result/base_result.html' %}
+{% block result %}
+<div class="quiz-generator-container">
+    <div class="quiz-generator-card">
+        <h2 class="quiz-title">Generate Quiz</h2>
+        <form method="get" action="{% url 'take_quiz' file.id %}" class="quiz-form">
+            {% csrf_token %}
+            
+            <!-- Number of Questions - Modern Select -->
+            <div class="form-group">
+                <label for="num_questions" class="form-label">Number of Questions</label>
+                <div class="custom-select">
+                    <select name="num_questions" id="num_questions" required>
+                        <option value="" disabled selected>Select quantity</option>
+                        <option value="10">10 Questions</option>
+                        <option value="20">20 Questions</option>
+                        <option value="30">30 Questions</option>
+                        <option value="40">40 Questions</option>
+                        <option value="50">50 Questions</option>
+                    </select>
+                    <span class="select-arrow"></span>
+                </div>
+            </div>
+            
+            <!-- Difficulty Level - Slider -->
+            <div class="form-group">
+                <label class="form-label">Difficulty Level</label>
+                <div class="difficulty-slider">
+                    <input type="range" name="difficulty" id="difficulty" 
+                           min="1" max="3" 
+                           value="{% if request.GET.difficulty == 1 %}easy{% elif request.GET.difficulty == 3 %}hard{% else %}medium{% endif %}" 
+                           class="slider"
+                           oninput="updateDifficultyLabel(this.value)">
+                    <div class="slider-labels">
+                        <span class="slider-label" data-value="1">Easy</span>
+                        <span class="slider-label" data-value="2">Medium</span>
+                        <span class="slider-label" data-value="3">Hard</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Generate Button -->
+            <button type="submit" class="generate-btn">
+                <span>Generate Quiz</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+/knowbite
+*.env
+*.log
+logs/
+*.sqlite3

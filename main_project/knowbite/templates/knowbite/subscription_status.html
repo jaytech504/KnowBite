@@ -1,0 +1,114 @@
+{% extends "knowbite/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Subscription Status</h2>
+                    
+                    {% if user_subscription %}
+                        <div class="subscription-details">
+                            <div class="alert 
+                                {% if user_subscription.status == 'active' or user_subscription.status == 'paid' %}alert-success
+                                {% elif user_subscription.status == 'trialing' %}alert-info
+                                {% elif user_subscription.status == 'past_due' %}alert-warning
+                                {% else %}alert-danger{% endif %}">
+                                <h4 class="alert-heading">
+                                    {{ user_subscription.status }}
+                                </h4>
+                                
+                                {% if user_subscription.is_in_trial %}
+                                    <p>Trial ends on {{ user_subscription.trial_end|date:"F d, Y" }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <dl class="row">
+                                <dt class="col-sm-4">Plan</dt>
+                                <dd class="col-sm-8">{{ user_subscription.plan.name }}</dd>
+                                
+                                <dt class="col-sm-4">Billing Period</dt>
+                                <dd class="col-sm-8">{{ user_subscription.plan.get_billing_period_display }}</dd>
+                                
+                                <dt class="col-sm-4">Current Period</dt>
+                                <dd class="col-sm-8">
+                                    {{ user_subscription.current_period_start|date:"F d, Y" }} - 
+                                    {{ user_subscription.current_period_end|date:"F d, Y" }}
+                                </dd>
+                                
+                                {% if user_subscription.canceled_at %}
+                                    <dt class="col-sm-4">Canceled On</dt>
+                                    <dd class="col-sm-8">{{ user_subscription.canceled_at|date:"F d, Y" }}</dd>
+                                {% endif %}
+                            </dl>
+                              {% if user_subscription.plan.name == 'free' %}
+                                <div class="text-center mt-4">
+                                    <a href="{% url 'pricing' %}" class="btn btn-primary">
+                                        Upgrade Plan <i class="bi bi-arrow-up-circle"></i>
+                                    </a>
+                                </div>
+                            {% elif user_subscription.status == 'canceled' %}
+                                <div class="text-center mt-4">
+                                    <p class="text-muted mb-2">
+                                        {% if user_subscription.current_period_end %}
+                                            Your subscription will remain active until {{ user_subscription.current_period_end|date:"F d, Y" }}.
+                                            After that, you'll be switched to the Free plan.
+                                        {% else %}
+                                            Your subscription has been cancelled.
+                                        {% endif %}
+                                    </p>
+                                    <a href="{% url 'pricing' %}" class="btn btn-primary">
+                                        Reactivate Subscription
+                                    </a>
+                                </div>
+                            {% elif user_subscription.status == 'paid' or user_subscription.status == 'active' or user_subscription.status == 'trialing' %}
+                                <div class="text-center mt-4">
+                                    <button class="btn btn-danger" onclick="cancelSubscription()">
+                                        Cancel Subscription
+                                    </button>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <p>You don't have an active subscription.</p>
+                            <a href="{% url 'pricing' %}" class="btn btn-primary">
+                                View Plans
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user_subscription and user_subscription.status != 'canceled' %}
+<script>
+function cancelSubscription() {
+    if (confirm('Are you sure you want to cancel your subscription?')) {
+        fetch('{% url "cancel_subscription" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Error canceling subscription: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error canceling subscription. Please try again.');
+        });
+    }
+}
+</script>
+{% endif %}
+{% endblock %}
