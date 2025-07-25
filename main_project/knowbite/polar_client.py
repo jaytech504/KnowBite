@@ -7,7 +7,9 @@ logger = logging.getLogger(__name__)
 
 class PolarClient:
     def __init__(self):
-        self.client = Polar(token=settings.POLAR_API_KEY)
+        self.client = Polar(
+            access_token=settings.POLAR_API_KEY  # Correct initialization
+        )
 
     def create_checkout_session(self, user_email: str, plan_id: str) -> Optional[str]:
         """Create a Polar checkout session"""
