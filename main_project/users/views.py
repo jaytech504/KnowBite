@@ -9,7 +9,6 @@ from django.contrib.auth.views import LoginView
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
-from users.utils import send_welcome_email
 # Create your views here.
 
 def register(request):
@@ -17,7 +16,6 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            send_welcome_email(user)
             messages.success(request, "Your account has been created successfully!")
             return redirect('login')
         else:
