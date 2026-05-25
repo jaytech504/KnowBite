@@ -81,36 +81,7 @@
                 </div>
             </aside>
 
-            <!-- Mobile Sidebar (offcanvas) -->
-            <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" style="width: 300px;">
-                <div class="offcanvas-header border-bottom">
-                    <h5 class="offcanvas-title">
-                          <img src="{% static 'logo.png' %}" alt="logo" height="30" width="30px">
-                        <span class="text-xl font-bold text-gray-900">KnowBite</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                </div>
-                <div class="offcanvas-body p-0">
-                    <nav class="nav flex-column">
-                        <a class="nav-link active" href="{% url 'summary' file.id %}">
-                            <i data-feather="file-text" class="feather"></i>
-                            Summary
-                        </a>
-                        <a class="nav-link" href="{% url 'chatbot' file.id %}">
-                            <i data-feather="message-circle" class="feather"></i>
-                            Chatbot
-                        </a>
-                        <a class="nav-link" href="{% url 'quiz_options' file.id %}">
-                            <i data-feather="list" class="feather"></i>
-                            Quiz
-                        </a>
-                        <a class="nav-link" href="{% url 'transcripts' file.id %}">
-                            <i data-feather="book" class="feather"></i>
-                            Transcript
-                        </a>
-                    </nav>
-                </div>
-            </div>
+           
 
             <!-- Main Content -->
             <main id="content" class="main-part">
